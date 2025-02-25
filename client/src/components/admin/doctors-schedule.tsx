@@ -178,6 +178,32 @@ export function DoctorsSchedule() {
         </div>
       )}
 
+      <style>
+        {`
+          .fc-event {
+            cursor: move !important;
+            transition: transform 0.1s, box-shadow 0.1s;
+          }
+          .fc-event:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+          .fc-event.fc-event-dragging {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            opacity: 0.8;
+          }
+          .fc-event-main {
+            padding: 4px !important;
+          }
+          .fc-timegrid-event-harness {
+            margin: 0 2px !important;
+          }
+          .fc-timegrid-slots td {
+            height: 3em !important;
+          }
+        `}
+      </style>
+
       <div className="rounded-md border">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -204,16 +230,19 @@ export function DoctorsSchedule() {
             minute: '2-digit',
             hour12: false
           }}
-          // Nouvelles propriétés pour améliorer l'ergonomie
-          eventResizableFromStart={true}  // Permet le redimensionnement depuis le début
-          eventDurationEditable={true}    // Permet le redimensionnement
-          snapDuration="00:15:00"         // Aligne sur des créneaux de 15 minutes
-          eventOverlap={false}            // Empêche le chevauchement
-          dropAccept=".fc-event"          // Facilite la zone de drop
-          eventResize={handleEventDrop}   // Même gestionnaire pour le redimensionnement
-          dragRevertDuration={0}          // Annulation instantanée si drop invalide
-          eventDragMinDistance={5}        // Réduit la distance minimale pour démarrer le drag
-          nowIndicator={true}             // Montre une ligne indiquant l'heure actuelle
+          // Propriétés optimisées pour une meilleure ergonomie
+          snapDuration="00:05:00"          // Snap plus précis à 5 minutes
+          eventResizableFromStart={true}   // Permet le redimensionnement depuis le début
+          eventDurationEditable={true}     // Permet le redimensionnement
+          eventOverlap={false}             // Empêche le chevauchement
+          eventResize={handleEventDrop}    // Même gestionnaire pour le redimensionnement
+          dragRevertDuration={200}         // Animation d'annulation plus rapide
+          eventDragMinDistance={3}         // Distance minimale réduite
+          nowIndicator={true}              // Indicateur d'heure actuelle
+          longPressDelay={100}             // Délai réduit pour le drag & drop sur mobile
+          eventDidMount={(info) => {       // Ajouter des tooltips
+            info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+          }}
         />
       </div>
 
