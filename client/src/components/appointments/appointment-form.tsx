@@ -37,6 +37,10 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     },
   });
 
+  // Obtenir le patient sélectionné
+  const selectedPatientId = form.watch("patientId");
+  const selectedPatient = patients?.find(p => p.id === selectedPatientId);
+
   const createAppointment = useMutation({
     mutationFn: async (data) => {
       const res = await apiRequest("POST", "/api/appointments", data);
@@ -97,6 +101,12 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               )}
             />
 
+            {selectedPatient && (
+              <div className="text-sm text-muted-foreground">
+                Date de naissance : {format(new Date(selectedPatient.dateOfBirth), 'dd/MM/yyyy')}
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="type"
@@ -125,12 +135,18 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               name="startTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Heure de début</FormLabel>
+                  <FormLabel>Date et heure du rendez-vous</FormLabel>
                   <FormControl>
                     <Input 
                       type="datetime-local" 
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        // Mettre à jour automatiquement l'heure de fin (+1 heure)
+                        const startDate = new Date(e.target.value);
+                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                        form.setValue("endTime", format(endDate, "yyyy-MM-dd'T'HH:mm"));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -143,7 +159,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               name="endTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Heure de fin</FormLabel>
+                  <FormLabel>Date et heure de fin du rendez-vous</FormLabel>
                   <FormControl>
                     <Input 
                       type="datetime-local" 

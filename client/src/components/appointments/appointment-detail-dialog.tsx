@@ -10,6 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, addHours } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
@@ -120,6 +121,12 @@ export function AppointmentDetailDialog({
           <DialogTitle>Détails du rendez-vous - {patientName}</DialogTitle>
         </DialogHeader>
 
+        <div className="mb-4 text-sm text-muted-foreground">
+          {currentPatient && (
+            <p>Date de naissance : {format(new Date(currentPatient.dateOfBirth), 'dd/MM/yyyy')}</p>
+          )}
+        </div>
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => updateAppointment.mutate(data))}
@@ -131,7 +138,7 @@ export function AppointmentDetailDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez le type" />
@@ -154,7 +161,7 @@ export function AppointmentDetailDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Statut</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez le statut" />
