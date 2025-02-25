@@ -123,9 +123,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAppointment(id: number, update: Partial<Appointment>): Promise<Appointment> {
+    // Assurez-vous que les dates sont au bon format
+    const formattedUpdate = {
+      ...update,
+      startTime: update.startTime ? new Date(update.startTime) : undefined,
+      endTime: update.endTime ? new Date(update.endTime) : undefined,
+    };
+
     const [appointment] = await db
       .update(appointments)
-      .set(update)
+      .set(formattedUpdate)
       .where(eq(appointments.id, id))
       .returning();
     if (!appointment) throw new Error("Appointment not found");

@@ -46,10 +46,15 @@ export function AppointmentDetailDialog({
 
   const updateAppointment = useMutation({
     mutationFn: async (data) => {
+      const formattedData = {
+        ...data,
+        startTime: new Date(data.startTime).toISOString(),
+        endTime: new Date(data.endTime).toISOString(),
+      };
       const res = await apiRequest(
         "PATCH",
         `/api/appointments/${appointment.id}`,
-        data
+        formattedData
       );
       return res.json();
     },
