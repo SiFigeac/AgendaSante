@@ -21,6 +21,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserForm } from "@/components/admin/user-form";
 import { AvailabilityManager } from "@/components/admin/availability-manager";
+import { DoctorsSchedule } from "@/components/admin/doctors-schedule";
 
 export default function AdminPage() {
   const { user: currentUser } = useAuth();
@@ -73,6 +74,7 @@ export default function AdminPage() {
           <TabsList>
             <TabsTrigger value="users">Gestion des utilisateurs</TabsTrigger>
             <TabsTrigger value="availability">Plages horaires</TabsTrigger>
+            <TabsTrigger value="schedule">Planning des médecins</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -97,7 +99,7 @@ export default function AdminPage() {
                   {users?.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.fullName}</TableCell>
+                      <TableCell>{user.firstName} {user.lastName}</TableCell>
                       <TableCell>
                         <Badge>
                           {user.role === "doctor" ? "Médecin" : 
@@ -122,6 +124,10 @@ export default function AdminPage() {
 
           <TabsContent value="availability">
             <AvailabilityManager />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <DoctorsSchedule />
           </TabsContent>
         </Tabs>
 
