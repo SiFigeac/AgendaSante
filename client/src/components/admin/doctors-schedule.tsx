@@ -314,19 +314,8 @@ export function DoctorsSchedule() {
           slotEventOverlap={false}         // Empêche le chevauchement dans les slots
           eventDidMount={(info) => {       // Ajouter des tooltips et des styles
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-
             info.el.style.cursor = 'grab';
-
-            // Gérer les événements de souris
-            info.el.addEventListener('mousedown', () => {
-              info.el.style.cursor = 'grabbing';
-              info.el.classList.add('is-dragging');
-            });
-
-            info.el.addEventListener('mouseup', () => {
-              info.el.style.cursor = 'grab';
-              info.el.classList.remove('is-dragging');
-            });
+            info.el.classList.add('fc-event-draggable');
           }}
           dragStart={(info) => {
             // Ajouter une classe pour le style pendant le drag
