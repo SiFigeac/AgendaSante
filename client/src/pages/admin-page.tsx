@@ -15,10 +15,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserForm } from "@/components/admin/user-form";
+import { AvailabilityManager } from "@/components/admin/availability-manager";
 
 export default function AdminPage() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const [showAddUser, setShowAddUser] = useState(false);
 
   // Rediriger si l'utilisateur n'est pas admin
   if (!currentUser?.isAdmin) {
@@ -62,40 +69,66 @@ export default function AdminPage() {
       <main className="flex-1 p-8">
         <h1 className="text-3xl font-bold mb-8">Administration</h1>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom d'utilisateur</TableHead>
-                <TableHead>Nom complet</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead>Admin</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users?.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.fullName}</TableCell>
-                  <TableCell>
-                    <Badge>
-                      {user.role === "doctor" ? "Médecin" : "Personnel"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={user.isAdmin}
-                      onCheckedChange={(checked) =>
-                        toggleAdmin.mutate({ userId: user.id, isAdmin: checked })
-                      }
-                      disabled={user.id === currentUser?.id}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Tabs defaultValue="users" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="users">Gestion des utilisateurs</TabsTrigger>
+            <TabsTrigger value="availability">Plages horaires</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={() => setShowAddUser(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvel utilisateur
+              </Button>
+            </div>
+
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom d'utilisateur</TableHead>
+                    <TableHead>Nom complet</TableHead>
+                    <TableHead>Rôle</TableHead>
+                    <TableHead>Admin</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users?.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.fullName}</TableCell>
+                      <TableCell>
+                        <Badge>
+                          {user.role === "doctor" ? "Médecin" : 
+                           user.role === "staff" ? "Personnel" : "Administrateur"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={user.isAdmin}
+                          onCheckedChange={(checked) =>
+                            toggleAdmin.mutate({ userId: user.id, isAdmin: checked })
+                          }
+                          disabled={user.id === currentUser?.id}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="availability">
+            <AvailabilityManager />
+          </TabsContent>
+        </Tabs>
+
+        <UserForm
+          open={showAddUser}
+          onOpenChange={setShowAddUser}
+        />
       </main>
     </div>
   );
