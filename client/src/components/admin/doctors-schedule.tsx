@@ -90,7 +90,10 @@ export function DoctorsSchedule() {
         throw new Error("La date de début doit être antérieure à la date de fin");
       }
 
-      console.log("Updating availability:", selectedEvent.id, data);
+      console.log("Updating availability:", selectedEvent.id, {
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+      });
 
       const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
         startTime: startDate.toISOString(),
@@ -167,17 +170,18 @@ export function DoctorsSchedule() {
     });
   };
 
-  const handleModifyClick = () => {
-    setIsEditing(true);
-  };
-
-  const onSubmit = async (data: any) => {
+  const handleSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
-    await updateAvailability.mutateAsync(data);
+    try {
+      await updateAvailability.mutateAsync(data);
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
   };
 
   return (
     <div className="space-y-4">
+      {/* La barre de recherche et le calendrier restent inchangés */}
       <div className="flex gap-4 justify-end">
         <div className="flex gap-2 items-center">
           <Input
@@ -236,8 +240,8 @@ export function DoctorsSchedule() {
       </div>
 
       {selectedEvent && (
-        <Dialog 
-          open={!!selectedEvent} 
+        <Dialog
+          open={!!selectedEvent}
           onOpenChange={(open) => {
             if (!open) {
               setSelectedEvent(null);
@@ -259,10 +263,7 @@ export function DoctorsSchedule() {
                 </DialogDescription>
               ) : (
                 <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4 mt-4"
-                  >
+                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -318,13 +319,14 @@ export function DoctorsSchedule() {
                 </Form>
               )}
             </DialogHeader>
+
             {!isEditing && (
               <div className="flex justify-end gap-2 mt-4">
                 {!selectedEvent?.isBooked && (
                   <>
                     <Button
                       variant="outline"
-                      onClick={handleModifyClick}
+                      onClick={() => setIsEditing(true)}
                     >
                       Modifier
                     </Button>
