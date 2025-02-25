@@ -31,7 +31,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       isAdmin: false,
-      permissions: [] as string[],
+      permissions: DEFAULT_PERMISSIONS.staff,
     },
   });
 

@@ -43,13 +43,10 @@ export const availability = pgTable("availability", {
   isBooked: boolean("is_booked").notNull().default(false),
 });
 
-// Modification du schéma de validation pour les dates
-export const insertAppointmentSchema = createInsertSchema(appointments, {
-  startTime: z.string().transform((str) => new Date(str)),
-  endTime: z.string().transform((str) => new Date(str)),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
+// Modification du schéma de validation pour les dates et les permissions
+export const insertUserSchema = createInsertSchema(users, {
+  permissions: z.array(z.string()).default([]),
+}).pick({
   username: true,
   password: true,
   firstName: true,
@@ -60,6 +57,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertPatientSchema = createInsertSchema(patients);
+
+export const insertAppointmentSchema = createInsertSchema(appointments, {
+  startTime: z.string().transform((str) => new Date(str)),
+  endTime: z.string().transform((str) => new Date(str)),
+});
 
 export const insertAvailabilitySchema = createInsertSchema(availability, {
   startTime: z.string().transform((str) => new Date(str)),
