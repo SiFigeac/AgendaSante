@@ -7,7 +7,8 @@ import {
   Users, 
   Home,
   LogOut,
-  Settings
+  Settings,
+  Clock
 } from "lucide-react";
 
 export function SidebarNav() {
@@ -17,6 +18,7 @@ export function SidebarNav() {
   const navigation = [
     { name: "Tableau de bord", href: "/", icon: Home },
     { name: "Calendrier", href: "/calendar", icon: Calendar },
+    { name: "Planning", href: "/schedule", icon: Clock },
     { name: "Patients", href: "/patients", icon: Users },
     ...(user?.isAdmin ? [{ name: "Administration", href: "/admin", icon: Settings }] : []),
   ];
@@ -47,7 +49,7 @@ export function SidebarNav() {
       <div className="border-t p-4">
         <div className="flex items-center gap-4 mb-4">
           <div>
-            <p className="text-sm font-medium">{user?.fullName}</p>
+            <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
             <p className="text-xs text-muted-foreground capitalize">
               {user?.role === 'doctor' ? 'Médecin' : 'Personnel'}
               {user?.isAdmin && ' (Admin)'}

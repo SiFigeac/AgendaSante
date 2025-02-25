@@ -12,7 +12,7 @@ export function DoctorsSchedule() {
 
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    select: (users) => users.filter(u => u.role === "doctor"),
+    select: (users) => users?.filter(u => u.role === "doctor"),
   });
 
   const { data: availabilities } = useQuery<Availability[]>({
@@ -36,7 +36,7 @@ export function DoctorsSchedule() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Select onValueChange={(value) => setSelectedDoctor(value ? parseInt(value) : null)}>
+        <Select onValueChange={(value) => setSelectedDoctor(value ? parseInt(value) : null)} value={selectedDoctor?.toString() || ""}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Tous les médecins" />
           </SelectTrigger>

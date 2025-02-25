@@ -27,7 +27,7 @@ export function AvailabilityManager() {
 
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    select: (users) => users.filter(u => u.role === "doctor"),
+    select: (users) => users?.filter(u => u.role === "doctor"),
   });
 
   const { data: availabilities } = useQuery<Availability[]>({
@@ -85,7 +85,7 @@ export function AvailabilityManager() {
                     <SelectContent>
                       {doctors?.map((doctor) => (
                         <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                          {doctor.fullName}
+                          {doctor.firstName} {doctor.lastName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -156,7 +156,7 @@ export function AvailabilityManager() {
               const doctor = doctors?.find(d => d.id === availability.doctorId);
               return (
                 <TableRow key={availability.id}>
-                  <TableCell>{doctor?.fullName}</TableCell>
+                  <TableCell>{doctor?.firstName} {doctor?.lastName}</TableCell>
                   <TableCell>
                     {format(new Date(availability.startTime), 'dd MMMM yyyy', { locale: fr })}
                   </TableCell>
