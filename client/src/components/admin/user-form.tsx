@@ -18,6 +18,11 @@ interface UserFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function generatePastelColor(): string {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 80%)`;
+}
+
 const DEFAULT_PERMISSIONS = {
   doctor: ["view_appointments", "manage_own_appointments"],
   staff: ["view_appointments", "manage_all_appointments", "manage_patients"],
@@ -53,7 +58,11 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
 
   const createUser = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/admin/users", data);
+      const userData = {
+        ...data,
+        color: generatePastelColor(), // Ajouter une couleur aléatoire
+      };
+      const res = await apiRequest("POST", "/api/admin/users", userData);
       if (!res.ok) {
         const error = await res.text();
         throw new Error(error);
@@ -126,8 +135,8 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
                   <FormItem>
                     <FormLabel>Nom</FormLabel>
                     <FormControl>
-                      <Input 
-                        {...field} 
+                      <Input
+                        {...field}
                         onChange={(e) => {
                           // Convertir en majuscules
                           const value = e.target.value.toUpperCase();

@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   role: text("role", { enum: ["doctor", "staff", "admin"] }).notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
   permissions: text("permissions").array(),
+  color: text("color"),
 });
 
 export const patients = pgTable("patients", {

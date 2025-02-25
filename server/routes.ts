@@ -137,6 +137,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/availability/:id", isAdmin, async (req, res) => {
+    try {
+      const availabilityId = parseInt(req.params.id);
+      const availability = await storage.updateAvailability(availabilityId, req.body);
+      res.json(availability);
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour de la disponibilité" });
+    }
+  });
+
+  app.delete("/api/availability/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteAvailability(parseInt(req.params.id));
+      res.sendStatus(204);
+    } catch (error) {
+      console.error('Error deleting availability:', error);
+      res.status(500).json({ error: "Erreur lors de la suppression de la disponibilité" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

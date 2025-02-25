@@ -1,16 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
+import interactionPlugin from "@fullcalendar/interaction";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertAvailabilitySchema } from "@shared/schema";
+import { Loader2 } from "lucide-react";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
 
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
@@ -21,19 +39,63 @@ export function DoctorsSchedule() {
     queryKey: ["/api/availability"],
   });
 
-  // Filtrer les disponibilités par médecin si un médecin est sélectionné
-  const filteredAvailabilities = selectedDoctor
-    ? availabilities?.filter(a => a.doctorId === selectedDoctor)
-    : availabilities;
+  const form = useForm({
+    resolver: zodResolver(insertAvailabilitySchema),
+  });
 
-  // Convertir les disponibilités en événements pour FullCalendar
-  const events = filteredAvailabilities?.map(availability => ({
-    id: availability.id.toString(),
-    title: `Disponible ${availability.isBooked ? '(Réservé)' : ''}`,
-    start: availability.startTime,
-    end: availability.endTime,
-    backgroundColor: availability.isBooked ? '#94a3b8' : '#22c55e',
-  }));
+  const deleteAvailability = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/availability/${id}`);
+      if (!res.ok) {
+        throw new Error("Erreur lors de la suppression");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Succès",
+        description: "La plage horaire a été supprimée",
+      });
+      setSelectedEvent(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateAvailability = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
+        startTime: new Date(data.startTime).toISOString(),
+        endTime: new Date(data.endTime).toISOString(),
+      });
+      if (!res.ok) {
+        throw new Error("Erreur lors de la modification");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Succès",
+        description: "La plage horaire a été modifiée",
+      });
+      setSelectedEvent(null);
+      setIsEditing(false);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Filtrer les médecins en fonction du terme de recherche
   const filteredDoctors = doctors?.filter(doctor => {
@@ -44,6 +106,38 @@ export function DoctorsSchedule() {
   // Formater le nom du médecin
   const formatDoctorName = (doctor: User) => {
     return `${doctor.lastName} ${doctor.firstName}`;
+  };
+
+  // Convertir les disponibilités en événements pour FullCalendar
+  const events = availabilities?.map(availability => {
+    const doctor = doctors?.find(d => d.id === availability.doctorId);
+    return {
+      id: availability.id.toString(),
+      title: doctor ? formatDoctorName(doctor) : "Disponible",
+      start: availability.startTime,
+      end: availability.endTime,
+      backgroundColor: doctor?.color,
+      extendedProps: {
+        isBooked: availability.isBooked,
+        doctorId: availability.doctorId,
+      }
+    };
+  });
+
+  const handleEventClick = (info: any) => {
+    const event = {
+      id: parseInt(info.event.id),
+      title: info.event.title,
+      start: info.event.start,
+      end: info.event.end,
+      isBooked: info.event.extendedProps.isBooked,
+    };
+    setSelectedEvent(event);
+
+    if (event.start && event.end) {
+      form.setValue("startTime", event.start.toISOString().slice(0, 16));
+      form.setValue("endTime", event.end.toISOString().slice(0, 16));
+    }
   };
 
   return (
@@ -87,7 +181,7 @@ export function DoctorsSchedule() {
 
       <div className="rounded-md border">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
@@ -101,8 +195,112 @@ export function DoctorsSchedule() {
           events={events}
           height="auto"
           slotDuration="00:15:00"
+          eventClick={handleEventClick}
         />
       </div>
+
+      <Dialog open={!!selectedEvent} onOpenChange={() => {
+        setSelectedEvent(null);
+        setIsEditing(false);
+        form.reset();
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Plage horaire</DialogTitle>
+            {!isEditing ? (
+              <DialogDescription>
+                {selectedEvent?.title}
+                <br />
+                Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
+                <br />
+                Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
+              </DialogDescription>
+            ) : (
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit((data) => updateAvailability.mutate(data))}
+                  className="space-y-4 mt-4"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="startTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date et heure de début</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date et heure de fin</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Annuler
+                    </Button>
+                    <Button type="submit" disabled={updateAvailability.isPending}>
+                      {updateAvailability.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Modifier
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            )}
+          </DialogHeader>
+          {!isEditing && (
+            <div className="flex justify-end gap-2 mt-4">
+              {!selectedEvent?.isBooked && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
+                  >
+                    Supprimer
+                  </Button>
+                </>
+              )}
+              <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+                Fermer
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
