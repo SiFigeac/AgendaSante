@@ -41,6 +41,11 @@ export function DoctorsSchedule() {
     return fullName.includes(searchTerm.toLowerCase());
   });
 
+  // Formater le nom du médecin
+  const formatDoctorName = (doctor: User) => {
+    return `Dr ${doctor.lastName.toUpperCase()} ${doctor.firstName}`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex gap-4 justify-end">
@@ -74,7 +79,7 @@ export function DoctorsSchedule() {
                 setSearchTerm("");
               }}
             >
-              {doctor.firstName} {doctor.lastName}
+              {formatDoctorName(doctor)}
             </Button>
           ))}
         </div>

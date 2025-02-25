@@ -42,7 +42,15 @@ export function AvailabilityManager() {
 
   const createAvailability = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/availability", data);
+      // Convertir les dates en format ISO
+      const formattedData = {
+        ...data,
+        startTime: new Date(data.startTime).toISOString(),
+        endTime: new Date(data.endTime).toISOString(),
+        doctorId: selectedDoctor,
+      };
+
+      const res = await apiRequest("POST", "/api/availability", formattedData);
       if (!res.ok) {
         throw new Error(await res.text());
       }
@@ -72,8 +80,14 @@ export function AvailabilityManager() {
     return fullName.includes(searchTerm.toLowerCase());
   });
 
-  const selectedDoctorName = doctors?.find(d => d.id === selectedDoctor)
-    ? `${doctors.find(d => d.id === selectedDoctor)?.firstName} ${doctors.find(d => d.id === selectedDoctor)?.lastName}`
+  // Formater le nom du médecin
+  const formatDoctorName = (doctor: User) => {
+    return `Dr ${doctor.lastName.toUpperCase()} ${doctor.firstName}`;
+  };
+
+  const selectedDoctorInfo = doctors?.find(d => d.id === selectedDoctor);
+  const selectedDoctorName = selectedDoctorInfo 
+    ? formatDoctorName(selectedDoctorInfo)
     : "Sélectionnez un médecin";
 
   return (
@@ -83,7 +97,7 @@ export function AvailabilityManager() {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => createAvailability.mutate({...data, doctorId: selectedDoctor}))}
+            onSubmit={form.handleSubmit((data) => createAvailability.mutate(data))}
             className="space-y-4"
           >
             <FormField
@@ -111,7 +125,7 @@ export function AvailabilityManager() {
                               setSearchTerm("");
                             }}
                           >
-                            {doctor.firstName} {doctor.lastName}
+                            {formatDoctorName(doctor)}
                           </Button>
                         ))}
                       </div>
@@ -196,9 +210,9 @@ export function AvailabilityManager() {
           <TableBody>
             {availabilities?.map((availability) => {
               const doctor = doctors?.find(d => d.id === availability.doctorId);
-              return (
+              return doctor ? (
                 <TableRow key={availability.id}>
-                  <TableCell>{doctor?.firstName} {doctor?.lastName}</TableCell>
+                  <TableCell>{formatDoctorName(doctor)}</TableCell>
                   <TableCell>
                     {format(new Date(availability.startTime), 'dd MMMM yyyy', { locale: fr })}
                   </TableCell>
@@ -211,7 +225,7 @@ export function AvailabilityManager() {
                     </Badge>
                   </TableCell>
                 </TableRow>
-              );
+              ) : null;
             })}
           </TableBody>
         </Table>
