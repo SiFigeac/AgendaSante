@@ -114,7 +114,7 @@ export function DoctorsSchedule() {
     return fullName.includes(searchTerm.toLowerCase());
   });
 
-  // Formater le nom du médecin
+  // Formatage du nom du médecin
   const formatDoctorName = (doctor: User) => {
     return `${doctor.lastName} ${doctor.firstName}`;
   };
@@ -151,6 +151,10 @@ export function DoctorsSchedule() {
       startTime: event.start.toISOString().slice(0, 16),
       endTime: event.end.toISOString().slice(0, 16)
     });
+  };
+
+  const handleModifyClick = () => {
+    setIsEditing(true);
   };
 
   return (
@@ -237,7 +241,10 @@ export function DoctorsSchedule() {
               ) : (
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((data) => updateAvailability.mutate(data))}
+                    onSubmit={form.handleSubmit((data) => {
+                      console.log("Form submitted with data:", data);
+                      updateAvailability.mutate(data);
+                    })}
                     className="space-y-4 mt-4"
                   >
                     <div className="grid grid-cols-2 gap-4">
@@ -301,7 +308,7 @@ export function DoctorsSchedule() {
                   <>
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditing(true)}
+                      onClick={handleModifyClick}
                     >
                       Modifier
                     </Button>
