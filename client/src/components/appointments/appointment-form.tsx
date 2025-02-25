@@ -33,13 +33,18 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
       doctorId: user?.id,
       startTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
-      status: "scheduled",
+      status: "scheduled" as const,
     },
   });
 
   const createAppointment = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/appointments", data);
+      const formattedData = {
+        ...data,
+        startTime: new Date(data.startTime).toISOString(),
+        endTime: new Date(data.endTime).toISOString(),
+      };
+      const res = await apiRequest("POST", "/api/appointments", formattedData);
       return res.json();
     },
     onSuccess: () => {
@@ -127,7 +132,12 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                 <FormItem>
                   <FormLabel>Heure de début</FormLabel>
                   <FormControl>
-                    <Input type="datetime-local" {...field} />
+                    <Input 
+                      type="datetime-local" 
+                      {...field}
+                      value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -141,7 +151,12 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                 <FormItem>
                   <FormLabel>Heure de fin</FormLabel>
                   <FormControl>
-                    <Input type="datetime-local" {...field} />
+                    <Input 
+                      type="datetime-local" 
+                      {...field}
+                      value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
