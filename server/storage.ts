@@ -1,14 +1,17 @@
-import { InsertUser, User, Patient, InsertPatient, Appointment, InsertAppointment } from "@shared/schema";
+import { users, patients, appointments, type User, type InsertUser, type Patient, type InsertPatient, type Appointment, type InsertAppointment } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Patient operations
   createPatient(patient: InsertPatient): Promise<Patient>;
   getPatient(id: number): Promise<Patient | undefined>;
@@ -25,108 +28,109 @@ export interface IStorage {
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private patients: Map<number, Patient>;
-  private appointments: Map<number, Appointment>;
-  private currentId: { [key: string]: number };
-  sessionStore: session.SessionStore;
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.patients = new Map();
-    this.appointments = new Map();
-    this.currentId = { users: 1, patients: 1, appointments: 1 };
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.users++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async createPatient(insertPatient: InsertPatient): Promise<Patient> {
-    const id = this.currentId.patients++;
-    const patient = { ...insertPatient, id };
-    this.patients.set(id, patient);
+    const [patient] = await db.insert(patients).values(insertPatient).returning();
     return patient;
   }
 
   async getPatient(id: number): Promise<Patient | undefined> {
-    return this.patients.get(id);
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+    return patient;
   }
 
   async getPatients(): Promise<Patient[]> {
-    return Array.from(this.patients.values());
+    return await db.select().from(patients);
   }
 
   async updatePatient(id: number, update: Partial<Patient>): Promise<Patient> {
-    const patient = this.patients.get(id);
+    const [patient] = await db
+      .update(patients)
+      .set(update)
+      .where(eq(patients.id, id))
+      .returning();
     if (!patient) throw new Error("Patient not found");
-    const updated = { ...patient, ...update };
-    this.patients.set(id, updated);
-    return updated;
+    return patient;
   }
 
   async deletePatient(id: number): Promise<void> {
-    this.patients.delete(id);
+    await db.delete(patients).where(eq(patients.id, id));
   }
 
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
-    const id = this.currentId.appointments++;
-    const appointment = { ...insertAppointment, id };
-    this.appointments.set(id, appointment);
+    const [appointment] = await db
+      .insert(appointments)
+      .values(insertAppointment)
+      .returning();
     return appointment;
   }
 
   async getAppointment(id: number): Promise<Appointment | undefined> {
-    return this.appointments.get(id);
+    const [appointment] = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.id, id));
+    return appointment;
   }
 
   async getAppointments(): Promise<Appointment[]> {
-    return Array.from(this.appointments.values());
+    return await db.select().from(appointments);
   }
 
   async getAppointmentsByPatient(patientId: number): Promise<Appointment[]> {
-    return Array.from(this.appointments.values()).filter(
-      (apt) => apt.patientId === patientId
-    );
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.patientId, patientId));
   }
 
   async getAppointmentsByDoctor(doctorId: number): Promise<Appointment[]> {
-    return Array.from(this.appointments.values()).filter(
-      (apt) => apt.doctorId === doctorId
-    );
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.doctorId, doctorId));
   }
 
   async updateAppointment(id: number, update: Partial<Appointment>): Promise<Appointment> {
-    const appointment = this.appointments.get(id);
+    const [appointment] = await db
+      .update(appointments)
+      .set(update)
+      .where(eq(appointments.id, id))
+      .returning();
     if (!appointment) throw new Error("Appointment not found");
-    const updated = { ...appointment, ...update };
-    this.appointments.set(id, updated);
-    return updated;
+    return appointment;
   }
 
   async deleteAppointment(id: number): Promise<void> {
-    this.appointments.delete(id);
+    await db.delete(appointments).where(eq(appointments.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
