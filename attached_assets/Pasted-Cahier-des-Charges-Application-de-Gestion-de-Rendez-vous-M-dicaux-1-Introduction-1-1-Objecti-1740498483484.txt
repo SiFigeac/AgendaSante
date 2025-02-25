@@ -1,0 +1,95 @@
+Cahier des Charges : Application de Gestion de Rendez-vous Médicaux
+1. Introduction
+•	1.1. Objectif du projet : Développer une application web et/ou mobile permettant aux médecins de gérer efficacement leurs rendez-vous avec les patients, d'optimiser leur emploi du temps et d'améliorer la communication avec leur patientèle.
+•	1.2. Public cible : Médecins généralistes et spécialistes, personnel médical de secrétariat.
+•	1.3. Contexte : Face à la complexité croissante de la gestion des rendez-vous et à la nécessité d'améliorer l'expérience patient, une application dédiée s'avère être une solution pertinente.
+2. Fonctionnalités
+•	2.1. Gestion des rendez-vous :
+o	2.1.1. Création de rendez-vous :
+	Possibilité de définir le type de consultation, la durée, le motif, etc.
+	Gestion des disponibilités du médecin (horaires, jours fériés, congés).
+	Prise en compte des contraintes spécifiques (ex : rendez-vous longs nécessitant un matériel spécifique).
+o	2.1.2. Modification et suppression de rendez-vous :
+	Possibilité de modifier les informations d'un rendez-vous existant.
+	Gestion des annulations et reports de rendez-vous.
+	Envoi automatique de notifications aux patients concernés en cas de modification ou d'annulation.
+o	2.1.3. Visualisation du planning :
+	Affichage clair et intuitif du planning par jour, semaine, mois.
+	Code couleur pour identifier les différents types de rendez-vous ou leur statut (confirmé, annulé, etc.).
+	Possibilité de filtrer les rendez-vous par médecin, type de consultation, etc.
+o	2.1.4. Recherche de disponibilités :
+	Fonctionnalité permettant de trouver rapidement les créneaux disponibles pour un type de consultation donné.
+o	2.1.5. Gestion des récurrences :
+	Possibilité de créer des rendez-vous récurrents (ex : séances de kinésithérapie).
+•	2.2. Gestion des patients :
+o	2.2.1. Création et modification de fiches patients :
+	Collecte des informations personnelles (nom, prénom, date de naissance, coordonnées, etc.).
+	Possibilité d'ajouter des informations médicales pertinentes (antécédents, allergies, traitements en cours, etc.).
+o	2.2.2. Recherche de patients :
+	Fonction de recherche rapide par nom, prénom, numéro de téléphone, etc.
+o	2.2.3. Historique des rendez-vous :
+	Consultation de l'historique des rendez-vous d'un patient donné.
+•	2.3. Communication avec les patients :
+o	2.3.1. Envoi de rappels de rendez-vous :
+	Envoi automatique de SMS ou d'emails de rappel aux patients avant leur rendez-vous.
+	Personnalisation du message de rappel.
+o	2.3.2. Envoi de notifications :
+	Envoi de notifications en cas de modification ou d'annulation de rendez-vous.
+o	2.3.3. Messagerie sécurisée (optionnelle) :
+	Permettre aux médecins et aux patients de communiquer de manière sécurisée via l'application.
+•	2.4. Administration :
+o	2.4.1. Gestion des utilisateurs :
+	Création et gestion des comptes utilisateurs (médecins, secrétaires).
+	Gestion des droits d'accès.
+o	2.4.2. Configuration des paramètres :
+	Définition des types de consultation, des durées par défaut, des motifs de rendez-vous, etc.
+	Configuration des rappels de rendez-vous (fréquence, mode d'envoi, etc.).
+o	2.4.3. Statistiques et rapports :
+	Génération de statistiques sur l'activité du cabinet (nombre de rendez-vous, taux d'annulation, etc.).
+	Création de rapports personnalisés.
+3. Interfaces et Ergonomie
+•	3.1. Interface utilisateur :
+o	L'interface doit être intuitive, facile à utiliser et adaptée aux différents supports (ordinateur, tablette, smartphone).
+o	Design moderne et ergonomique.
+o	Accessibilité (respect des normes WCAG).
+•	3.2. Expérience utilisateur :
+o	Parcours utilisateur fluide et efficace.
+o	Réduction du nombre de clics nécessaires pour effectuer une action.
+o	Assistance à l'utilisateur (tutoriels, FAQ, etc.).
+4. Technologies
+•	4.1. Plateformes :
+o	Application web responsive (accessible depuis n'importe quel navigateur).
+o	Applications mobiles natives (iOS et Android) (optionnel).
+•	4.2. Langages et frameworks :
+o	En fonction du code source disponible sur GitHub : https://github.com/eleongithub/doctolib.
+o	
+•	4.3. Base de données :
+o	en fonction du code source disponible sur GitHub : https://github.com/eleongithub/doctolib.
+o	
+•	4.4. Sécurité :
+o	Protection des données personnelles des patients (conformité RGPD).
+o	Authentification forte des utilisateurs.
+o	Chiffrement des données sensibles.
+5. Contraintes
+•	5.1. RGPD : L'application doit être conforme au Règlement Général sur la Protection des Données (RGPD).
+•	5.2. Sécurité : La sécurité des données doit être une priorité absolue.
+•	5.3. Performance : L'application doit être rapide et réactive.
+•	5.4. Compatibilité : L'application doit être compatible avec les principaux navigateurs et systèmes d'exploitation.
+6. Tests et Recette
+•	6.1. Tests unitaires : Tests automatisés pour vérifier le bon fonctionnement de chaque composant de l'application.
+•	6.2. Tests d'intégration : Tests pour vérifier l'interaction entre les différents composants.
+•	6.3. Tests d'acceptation (recette) : Tests réalisés par les utilisateurs finaux pour valider la conformité de l'application aux exigences du cahier des charges.
+7. Maintenance
+•	7.1. Maintenance corrective : Correction des bugs et anomalies détectées après la mise en production.
+•	7.2. Maintenance évolutive : Ajout de nouvelles fonctionnalités et améliorations de l'application.
+•	7.3. Maintenance préventive : Optimisation des performances et renforcement de la sécurité.
+8. Annexes
+•	9.1. Maquettes : Représentations visuelles des écrans de l'application.
+•	9.2. Schémas de base de données : Description de la structure de la base de données.
+•	9.3. Glossaire : Définition des termes techniques utilisés dans le cahier des charges.
+Pour compléter ce cahier des charges de manière optimale, je te recommande d'analyser en détail le code source disponible sur le dépôt GitHub. Cela te permettra de préciser les technologies utilisées, les fonctionnalités déjà implémentées et les points à améliorer ou à compléter.
+N'hésite pas à me fournir plus d'informations sur le code source, et je pourrai affiner davantage ce cahier des charges.
+Citations:
+o	https://github.com/eleongithub/doctolib.
+
+
