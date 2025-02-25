@@ -25,13 +25,13 @@ export default function AuthPage() {
       <div className="flex-1 p-8 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Medical Appointments Manager</CardTitle>
+            <CardTitle>Gestion des Rendez-vous Médicaux</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="login">Connexion</TabsTrigger>
+                <TabsTrigger value="register">Inscription</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <LoginForm />
@@ -45,10 +45,10 @@ export default function AuthPage() {
       </div>
       <div className="hidden lg:flex flex-1 bg-primary items-center justify-center text-primary-foreground">
         <div className="max-w-md p-8">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Medical Manager</h1>
+          <h1 className="text-4xl font-bold mb-4">Bienvenue sur Medical Manager</h1>
           <p className="text-lg opacity-90">
-            Efficiently manage your medical practice with our comprehensive appointment scheduling
-            and patient management system.
+            Gérez efficacement votre cabinet médical avec notre système complet de gestion
+            des rendez-vous et des patients.
           </p>
         </div>
       </div>
@@ -70,7 +70,7 @@ function LoginForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Nom d'utilisateur</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -83,7 +83,7 @@ function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Mot de passe</FormLabel>
               <FormControl>
                 <Input type="password" {...field} />
               </FormControl>
@@ -93,7 +93,7 @@ function LoginForm() {
         />
         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
           {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Login
+          Se connecter
         </Button>
       </form>
     </Form>
@@ -114,7 +114,7 @@ function RegisterForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Nom d'utilisateur</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -127,7 +127,7 @@ function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Mot de passe</FormLabel>
               <FormControl>
                 <Input type="password" {...field} />
               </FormControl>
@@ -140,7 +140,7 @@ function RegisterForm() {
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>Nom complet</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -153,16 +153,16 @@ function RegisterForm() {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel>Rôle</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder="Sélectionnez un rôle" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="doctor">Médecin</SelectItem>
+                  <SelectItem value="staff">Personnel</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -171,7 +171,7 @@ function RegisterForm() {
         />
         <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
           {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Register
+          S'inscrire
         </Button>
       </form>
     </Form>

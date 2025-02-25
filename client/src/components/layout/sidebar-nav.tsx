@@ -14,8 +14,8 @@ export function SidebarNav() {
   const { logoutMutation, user } = useAuth();
 
   const navigation = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Calendar", href: "/calendar", icon: Calendar },
+    { name: "Tableau de bord", href: "/", icon: Home },
+    { name: "Calendrier", href: "/calendar", icon: Calendar },
     { name: "Patients", href: "/patients", icon: Users },
   ];
 
@@ -46,7 +46,9 @@ export function SidebarNav() {
         <div className="flex items-center gap-4 mb-4">
           <div>
             <p className="text-sm font-medium">{user?.fullName}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            <p className="text-xs text-muted-foreground capitalize">
+              {user?.role === 'doctor' ? 'Médecin' : 'Personnel'}
+            </p>
           </div>
         </div>
         <Button
@@ -55,7 +57,7 @@ export function SidebarNav() {
           onClick={() => logoutMutation.mutate()}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          Déconnexion
         </Button>
       </div>
     </div>
