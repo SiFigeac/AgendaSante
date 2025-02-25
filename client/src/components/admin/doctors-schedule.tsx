@@ -144,12 +144,13 @@ export function DoctorsSchedule() {
       isBooked: info.event.extendedProps.isBooked,
     };
     setSelectedEvent(event);
+    setIsEditing(false);
 
     // Initialiser le formulaire avec les valeurs actuelles
-    if (event.start && event.end) {
-      form.setValue("startTime", event.start.toISOString().slice(0, 16));
-      form.setValue("endTime", event.end.toISOString().slice(0, 16));
-    }
+    form.reset({
+      startTime: event.start.toISOString().slice(0, 16),
+      endTime: event.end.toISOString().slice(0, 16)
+    });
   };
 
   return (

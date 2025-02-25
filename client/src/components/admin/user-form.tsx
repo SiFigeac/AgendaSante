@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -18,9 +18,20 @@ interface UserFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function generatePastelColor(): string {
+function generatePastelColor(existingColors: string[]): string {
   const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 80%)`;
+  const saturation = 70;
+  const lightness = 80;
+
+  // Générer une nouvelle couleur
+  const newColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+  // Si la couleur existe déjà, en générer une nouvelle
+  if (existingColors.includes(newColor)) {
+    return generatePastelColor(existingColors);
+  }
+
+  return newColor;
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -31,6 +42,11 @@ const DEFAULT_PERMISSIONS = {
 
 export function UserForm({ open, onOpenChange }: UserFormProps) {
   const { toast } = useToast();
+
+  // Récupérer les couleurs existantes
+  const { data: existingUsers } = useQuery({
+    queryKey: ["/api/admin/users"],
+  });
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -58,10 +74,13 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
 
   const createUser = useMutation({
     mutationFn: async (data: any) => {
+      const existingColors = existingUsers?.filter(u => u.role === "doctor").map(u => u.color) || [];
       const userData = {
         ...data,
-        color: generatePastelColor(), // Ajouter une couleur aléatoire
+        color: data.role === "doctor" ? generatePastelColor(existingColors) : null,
       };
+
+      console.log("Creating user with data:", userData);
       const res = await apiRequest("POST", "/api/admin/users", userData);
       if (!res.ok) {
         const error = await res.text();
