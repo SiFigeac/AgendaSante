@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useEffect } from "react";
 
 interface UserFormProps {
   open: boolean;
@@ -30,20 +31,27 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       isAdmin: false,
-      permissions: [],
+      permissions: [] as string[],
     },
   });
 
   // Mettre à jour les permissions en fonction du rôle sélectionné
   const role = form.watch("role");
-  const updatePermissions = (selectedRole: string) => {
-    if (selectedRole) {
-      form.setValue("permissions", DEFAULT_PERMISSIONS[selectedRole as keyof typeof DEFAULT_PERMISSIONS]);
+  const lastName = form.watch("lastName");
+
+  useEffect(() => {
+    if (role) {
+      form.setValue("permissions", DEFAULT_PERMISSIONS[role as keyof typeof DEFAULT_PERMISSIONS] || []);
+
+      // Ajouter "Dr" au nom si c'est un médecin
+      if (role === "doctor" && lastName) {
+        form.setValue("lastName", lastName.startsWith("Dr ") ? lastName : `Dr ${lastName}`);
+      }
     }
-  };
+  }, [role, lastName, form]);
 
   const createUser = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data) => {
       const res = await apiRequest("POST", "/api/admin/users", data);
       return res.json();
     },
@@ -108,10 +116,10 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="firstName"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prénom</FormLabel>
+                    <FormLabel>Nom</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -122,10 +130,10 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
 
               <FormField
                 control={form.control}
-                name="lastName"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom</FormLabel>
+                    <FormLabel>Prénom</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -141,10 +149,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rôle</FormLabel>
-                  <Select onValueChange={(value) => {
-                    field.onChange(value);
-                    updatePermissions(value);
-                  }}>
+                  <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez un rôle" />
