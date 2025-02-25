@@ -32,6 +32,12 @@ export const appointments = pgTable("appointments", {
   notes: text("notes"),
 });
 
+// Modification du schéma de validation pour les dates
+export const insertAppointmentSchema = createInsertSchema(appointments, {
+  startTime: z.string().transform((str) => new Date(str)),
+  endTime: z.string().transform((str) => new Date(str)),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -41,7 +47,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertPatientSchema = createInsertSchema(patients);
-export const insertAppointmentSchema = createInsertSchema(appointments);
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

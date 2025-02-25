@@ -38,13 +38,8 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   });
 
   const createAppointment = useMutation({
-    mutationFn: async (data: any) => {
-      const formattedData = {
-        ...data,
-        startTime: new Date(data.startTime).toISOString(),
-        endTime: new Date(data.endTime).toISOString(),
-      };
-      const res = await apiRequest("POST", "/api/appointments", formattedData);
+    mutationFn: async (data) => {
+      const res = await apiRequest("POST", "/api/appointments", data);
       return res.json();
     },
     onSuccess: () => {
@@ -135,7 +130,6 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                     <Input 
                       type="datetime-local" 
                       {...field}
-                      value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
@@ -154,7 +148,6 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                     <Input 
                       type="datetime-local" 
                       {...field}
-                      value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
