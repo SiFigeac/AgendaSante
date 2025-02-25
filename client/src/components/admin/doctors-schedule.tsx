@@ -191,6 +191,7 @@ export function DoctorsSchedule() {
             transform: scale(1.02);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
             opacity: 0.8;
+            z-index: 9999;
           }
           .fc-event-main {
             padding: 4px !important;
@@ -200,6 +201,28 @@ export function DoctorsSchedule() {
           }
           .fc-timegrid-slots td {
             height: 3em !important;
+            transition: background-color 0.2s;
+          }
+          .fc-highlight {
+            background: rgba(0, 120, 255, 0.1) !important;
+            border: 2px dashed rgba(0, 120, 255, 0.4) !important;
+          }
+          .fc-event-dragging-ghost {
+            opacity: 0.8;
+          }
+          .fc-event-selected {
+            box-shadow: 0 0 0 2px #3b82f6 !important;
+          }
+          .fc-timegrid-col-events {
+            margin: 0 2px !important;
+          }
+          .fc-timegrid-event {
+            margin: 1px 0 !important;
+            border-radius: 4px !important;
+          }
+          .fc-timegrid-now-indicator-line {
+            border-color: #ef4444 !important;
+            border-width: 2px !important;
           }
         `}
       </style>
@@ -230,8 +253,7 @@ export function DoctorsSchedule() {
             minute: '2-digit',
             hour12: false
           }}
-          // Propriétés optimisées pour une meilleure ergonomie
-          snapDuration="00:05:00"          // Snap plus précis à 5 minutes
+          snapDuration="00:15:00"          // Snap précis à 15 minutes
           eventResizableFromStart={true}   // Permet le redimensionnement depuis le début
           eventDurationEditable={true}     // Permet le redimensionnement
           eventOverlap={false}             // Empêche le chevauchement
@@ -240,8 +262,18 @@ export function DoctorsSchedule() {
           eventDragMinDistance={3}         // Distance minimale réduite
           nowIndicator={true}              // Indicateur d'heure actuelle
           longPressDelay={100}             // Délai réduit pour le drag & drop sur mobile
-          eventDidMount={(info) => {       // Ajouter des tooltips
+          slotEventOverlap={false}         // Empêche le chevauchement dans les slots
+          eventDidMount={(info) => {       // Ajouter des tooltips et des styles
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+
+            // Ajouter des styles pour l'effet d'aimantation
+            info.el.addEventListener('mousedown', () => {
+              info.el.style.cursor = 'grabbing';
+            });
+
+            info.el.addEventListener('mouseup', () => {
+              info.el.style.cursor = 'grab';
+            });
           }}
         />
       </div>
