@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,10 @@ export function DoctorsSchedule() {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
+  const form = useForm({
+    resolver: zodResolver(insertAvailabilitySchema),
+  });
+
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
     select: (users) => users?.filter(u => u.role === "doctor"),
@@ -37,10 +42,6 @@ export function DoctorsSchedule() {
 
   const { data: availabilities } = useQuery<Availability[]>({
     queryKey: ["/api/availability"],
-  });
-
-  const form = useForm({
-    resolver: zodResolver(insertAvailabilitySchema),
   });
 
   // Surveiller les changements de la date de début pour mettre à jour la date de fin
@@ -97,7 +98,8 @@ export function DoctorsSchedule() {
       });
 
       if (!res.ok) {
-        throw new Error("Erreur lors de la modification");
+        const error = await res.text();
+        throw new Error(error);
       }
 
       return res.json();
@@ -159,7 +161,6 @@ export function DoctorsSchedule() {
     setSelectedEvent(event);
     setIsEditing(false);
 
-    // Initialiser le formulaire avec les valeurs actuelles
     form.reset({
       startTime: event.start.toISOString().slice(0, 16),
       endTime: event.end.toISOString().slice(0, 16)
@@ -167,15 +168,12 @@ export function DoctorsSchedule() {
   };
 
   const handleModifyClick = () => {
-    if (!selectedEvent) return;
-
-    // Réinitialiser le formulaire avec les valeurs actuelles
-    form.reset({
-      startTime: new Date(selectedEvent.start).toISOString().slice(0, 16),
-      endTime: new Date(selectedEvent.end).toISOString().slice(0, 16)
-    });
-
     setIsEditing(true);
+  };
+
+  const onSubmit = async (data: any) => {
+    console.log("Form submitted with data:", data);
+    await updateAvailability.mutateAsync(data);
   };
 
   return (
@@ -262,10 +260,7 @@ export function DoctorsSchedule() {
               ) : (
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((data) => {
-                      console.log("Form submitted with data:", data);
-                      updateAvailability.mutate(data);
-                    })}
+                    onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-4 mt-4"
                   >
                     <div className="grid grid-cols-2 gap-4">
