@@ -42,6 +42,7 @@ export function UserList() {
             <TableHead>Prénom</TableHead>
             <TableHead>Rôle</TableHead>
             <TableHead>Admin</TableHead>
+            <TableHead>Statut</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,6 +59,11 @@ export function UserList() {
               <TableCell>
                 <Badge variant={user.isAdmin ? "default" : "secondary"}>
                   {user.isAdmin ? "Oui" : "Non"}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant={user.isActive ? "default" : "destructive"}>
+                  {user.isActive ? "Actif" : "Inactif"}
                 </Badge>
               </TableCell>
             </TableRow>

@@ -44,6 +44,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteUser(parseInt(req.params.id));
+      res.sendStatus(204);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ error: "Erreur lors de la suppression de l'utilisateur" });
+    }
+  });
+
   // Patient routes
   app.get("/api/patients", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

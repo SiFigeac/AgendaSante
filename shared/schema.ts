@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role", { enum: ["doctor", "staff", "admin"] }).notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
   permissions: text("permissions").array(),
   color: text("color"),
 });

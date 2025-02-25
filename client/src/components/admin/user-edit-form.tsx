@@ -12,6 +12,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { User } from "@shared/schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 interface UserEditFormProps {
   open: boolean;
@@ -26,6 +37,7 @@ function generatePastelColor(): string {
 
 export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
   const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema.partial()),
@@ -35,6 +47,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
       lastName: user.lastName,
       role: user.role,
       isAdmin: user.isAdmin,
+      isActive: user.isActive,
       permissions: user.permissions,
       color: user.color || generatePastelColor(),
     },
@@ -42,7 +55,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
 
   const updateUser = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Updating user with data:", data); 
+      console.log("Updating user with data:", data);
       const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
       if (!res.ok) {
         const error = await res.text();
@@ -67,59 +80,49 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
     },
   });
 
+  const deleteUser = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/admin/users/${user.id}`);
+      if (!res.ok) {
+        throw new Error("Erreur lors de la suppression");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Succès",
+        description: "Utilisateur supprimé avec succès",
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Modifier l'utilisateur</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier l'utilisateur</DialogTitle>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => updateUser.mutate(data))}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom d'utilisateur</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit((data) => updateUser.mutate(data))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
-                name="lastName"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value.toUpperCase();
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prénom</FormLabel>
+                    <FormLabel>Nom d'utilisateur</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -127,83 +130,170 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rôle</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un rôle" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="doctor">Médecin</SelectItem>
-                      <SelectItem value="staff">Personnel</SelectItem>
-                      <SelectItem value="admin">Administrateur</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value.toUpperCase();
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {form.watch("role") === "doctor" && (
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prénom</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="color"
+                name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Couleur</FormLabel>
-                    <div className="flex gap-2">
+                    <FormLabel>Rôle</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Input {...field} type="color" className="w-20 h-10" />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez un rôle" />
+                        </SelectTrigger>
                       </FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => field.onChange(generatePastelColor())}
-                      >
-                        Générer
-                      </Button>
-                    </div>
+                      <SelectContent>
+                        <SelectItem value="doctor">Médecin</SelectItem>
+                        <SelectItem value="staff">Personnel</SelectItem>
+                        <SelectItem value="admin">Administrateur</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
 
-            <FormField
-              control={form.control}
-              name="isAdmin"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel>Administrateur</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
+              {form.watch("role") === "doctor" && (
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Couleur</FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input {...field} type="color" className="w-20 h-10" />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => field.onChange(generatePastelColor())}
+                        >
+                          Générer
+                        </Button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
 
-            <Button type="submit" className="w-full" disabled={updateUser.isPending}>
-              {updateUser.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <FormField
+                control={form.control}
+                name="isAdmin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>Administrateur</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>Compte actif</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  Supprimer
+                </Button>
+                <Button type="submit" disabled={updateUser.isPending}>
+                  {updateUser.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Modifier l'utilisateur
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. L'utilisateur sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteUser.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteUser.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Supprimer"
               )}
-              Modifier l'utilisateur
-            </Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
