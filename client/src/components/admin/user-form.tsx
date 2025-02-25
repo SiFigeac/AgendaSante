@@ -32,6 +32,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
     defaultValues: {
       isAdmin: false,
       permissions: DEFAULT_PERMISSIONS.staff,
+      role: "staff" as const,
     },
   });
 
@@ -51,8 +52,12 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
   }, [role, lastName, form]);
 
   const createUser = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/admin/users", data);
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -121,7 +126,14 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
                   <FormItem>
                     <FormLabel>Nom</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        {...field} 
+                        onChange={(e) => {
+                          // Convertir en majuscules
+                          const value = e.target.value.toUpperCase();
+                          field.onChange(value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,7 +161,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rôle</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez un rôle" />

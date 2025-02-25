@@ -44,16 +44,14 @@ export const availability = pgTable("availability", {
 });
 
 // Modification du schéma de validation pour les dates et les permissions
-export const insertUserSchema = createInsertSchema(users, {
+export const insertUserSchema = z.object({
+  username: z.string().min(1, "Le nom d'utilisateur est requis"),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  firstName: z.string().min(1, "Le prénom est requis"),
+  lastName: z.string().min(1, "Le nom est requis"),
+  role: z.enum(["doctor", "staff", "admin"]),
+  isAdmin: z.boolean().default(false),
   permissions: z.array(z.string()).default([]),
-}).pick({
-  username: true,
-  password: true,
-  firstName: true,
-  lastName: true,
-  role: true,
-  isAdmin: true,
-  permissions: true,
 });
 
 export const insertPatientSchema = createInsertSchema(patients);
