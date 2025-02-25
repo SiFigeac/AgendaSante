@@ -204,6 +204,16 @@ export function DoctorsSchedule() {
             minute: '2-digit',
             hour12: false
           }}
+          // Nouvelles propriétés pour améliorer l'ergonomie
+          eventResizableFromStart={true}  // Permet le redimensionnement depuis le début
+          eventDurationEditable={true}    // Permet le redimensionnement
+          snapDuration="00:15:00"         // Aligne sur des créneaux de 15 minutes
+          eventOverlap={false}            // Empêche le chevauchement
+          dropAccept=".fc-event"          // Facilite la zone de drop
+          eventResize={handleEventDrop}   // Même gestionnaire pour le redimensionnement
+          dragRevertDuration={0}          // Annulation instantanée si drop invalide
+          eventDragMinDistance={5}        // Réduit la distance minimale pour démarrer le drag
+          nowIndicator={true}             // Montre une ligne indiquant l'heure actuelle
         />
       </div>
 
