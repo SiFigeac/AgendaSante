@@ -224,6 +224,35 @@ export function DoctorsSchedule() {
             border-color: #ef4444 !important;
             border-width: 2px !important;
           }
+          /* Amélioration de l'effet d'aimantation */
+          .fc-day {
+            transition: background-color 0.2s !important;
+          }
+          .fc-day.fc-day-today {
+            background-color: rgba(0, 120, 255, 0.05) !important;
+          }
+          .fc-timeline-slot.fc-timeline-slot-emphasize {
+            background-color: rgba(0, 120, 255, 0.05) !important;
+          }
+          .fc-time-grid .fc-slats td {
+            transition: background-color 0.2s !important;
+          }
+          .fc-time-grid .fc-slats td.fc-highlight {
+            background-color: rgba(0, 120, 255, 0.1) !important;
+          }
+          .fc-event.is-dragging {
+            opacity: 0.9 !important;
+            transform: scale(1.05) !important;
+          }
+          .fc-time-grid .fc-content-skeleton {
+            z-index: 3 !important;
+          }
+          .fc-timeline-event {
+            transition: all 0.2s !important;
+          }
+          .fc-timeline-event:hover {
+            transform: translateY(-1px) !important;
+          }
         `}
       </style>
 
@@ -269,10 +298,27 @@ export function DoctorsSchedule() {
             // Ajouter des styles pour l'effet d'aimantation
             info.el.addEventListener('mousedown', () => {
               info.el.style.cursor = 'grabbing';
+              info.el.classList.add('is-dragging');
             });
 
             info.el.addEventListener('mouseup', () => {
               info.el.style.cursor = 'grab';
+              info.el.classList.remove('is-dragging');
+            });
+
+            // Ajout de la gestion du survol pour l'effet d'aimantation
+            info.el.addEventListener('dragover', (e) => {
+              const column = e.target.closest('.fc-timegrid-col');
+              if (column) {
+                column.style.backgroundColor = 'rgba(0, 120, 255, 0.1)';
+              }
+            });
+
+            info.el.addEventListener('dragleave', (e) => {
+              const column = e.target.closest('.fc-timegrid-col');
+              if (column) {
+                column.style.backgroundColor = '';
+              }
             });
           }}
         />
