@@ -17,7 +17,7 @@ interface PatientFormProps {
 
 export function PatientForm({ open, onOpenChange }: PatientFormProps) {
   const { toast } = useToast();
-  
+
   const form = useForm({
     resolver: zodResolver(insertPatientSchema),
   });
@@ -30,15 +30,15 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
       toast({
-        title: "Success",
-        description: "Patient created successfully",
+        title: "Succès",
+        description: "Patient créé avec succès",
       });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
@@ -49,7 +49,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>New Patient</DialogTitle>
+          <DialogTitle>Nouveau patient</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -62,7 +62,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>Prénom</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -76,7 +76,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>Nom</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -90,7 +90,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
               name="dateOfBirth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
+                  <FormLabel>Date de naissance</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -104,7 +104,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>Téléphone</FormLabel>
                   <FormControl>
                     <Input type="tel" {...field} />
                   </FormControl>
@@ -145,7 +145,7 @@ export function PatientForm({ open, onOpenChange }: PatientFormProps) {
               {createPatient.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create Patient
+              Créer le patient
             </Button>
           </form>
         </Form>

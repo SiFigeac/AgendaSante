@@ -30,7 +30,7 @@ export default function PatientsPage() {
           <h1 className="text-3xl font-bold">Patients</h1>
           <Button onClick={() => setShowAddPatient(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Patient
+            Ajouter un patient
           </Button>
         </div>
 
@@ -38,9 +38,9 @@ export default function PatientsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Date of Birth</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Date de naissance</TableHead>
+                <TableHead>Téléphone</TableHead>
                 <TableHead>Email</TableHead>
               </TableRow>
             </TableHeader>

@@ -21,12 +21,12 @@ export default function HomePage() {
         <SidebarNav />
       </aside>
       <main className="flex-1 p-8">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-        
+        <h1 className="text-3xl font-bold mb-8">Tableau de bord</h1>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
+              <CardTitle className="text-sm font-medium">Total des rendez-vous</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -36,7 +36,7 @@ export default function HomePage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
+              <CardTitle className="text-sm font-medium">Confirmés</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -46,7 +46,7 @@ export default function HomePage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
+              <CardTitle className="text-sm font-medium">Annulés</CardTitle>
               <XCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>

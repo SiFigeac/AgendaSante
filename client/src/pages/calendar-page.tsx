@@ -7,12 +7,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showAddAppointment, setShowAddAppointment] = useState(false);
-  
+
   const { data: appointments } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
   });
@@ -30,7 +31,7 @@ export default function CalendarPage() {
   // Find patient names for appointments
   const getPatientName = (patientId: number) => {
     const patient = patients?.find(p => p.id === patientId);
-    return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
+    return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
   };
 
   return (
@@ -40,10 +41,10 @@ export default function CalendarPage() {
       </aside>
       <main className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Calendar</h1>
+          <h1 className="text-3xl font-bold">Calendrier</h1>
           <Button onClick={() => setShowAddAppointment(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            New Appointment
+            Nouveau rendez-vous
           </Button>
         </div>
 
@@ -54,19 +55,20 @@ export default function CalendarPage() {
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               className="rounded-md border"
+              locale={fr}
             />
           </div>
 
           <div className="flex-1">
             <h2 className="text-xl font-semibold mb-4">
-              Appointments for {format(selectedDate, 'MMMM d, yyyy')}
+              Rendez-vous du {format(selectedDate, 'd MMMM yyyy', { locale: fr })}
             </h2>
-            
+
             <div className="space-y-4">
               {dayAppointments?.length === 0 && (
-                <p className="text-muted-foreground">No appointments scheduled for this day.</p>
+                <p className="text-muted-foreground">Aucun rendez-vous prévu pour ce jour.</p>
               )}
-              
+
               {dayAppointments?.map((apt) => (
                 <div
                   key={apt.id}
@@ -75,10 +77,11 @@ export default function CalendarPage() {
                   <div>
                     <div className="font-medium">{getPatientName(apt.patientId)}</div>
                     <div className="text-sm text-muted-foreground">
-                      {format(new Date(apt.startTime), 'h:mm a')} - {format(new Date(apt.endTime), 'h:mm a')}
+                      {format(new Date(apt.startTime), 'HH:mm')} - {format(new Date(apt.endTime), 'HH:mm')}
                     </div>
                     <div className="text-sm text-muted-foreground capitalize">
-                      Type: {apt.type}
+                      Type : {apt.type === 'consultation' ? 'Consultation' :
+                             apt.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                     </div>
                   </div>
                   <Badge
@@ -86,7 +89,8 @@ export default function CalendarPage() {
                             apt.status === 'cancelled' ? 'destructive' : 'secondary'}
                     className="capitalize"
                   >
-                    {apt.status}
+                    {apt.status === 'confirmed' ? 'Confirmé' :
+                     apt.status === 'cancelled' ? 'Annulé' : 'Planifié'}
                   </Badge>
                 </div>
               ))}

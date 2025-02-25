@@ -45,15 +45,15 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
       toast({
-        title: "Success",
-        description: "Appointment created successfully",
+        title: "Succès",
+        description: "Rendez-vous créé avec succès",
       });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
@@ -64,7 +64,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>New Appointment</DialogTitle>
+          <DialogTitle>Nouveau rendez-vous</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -81,7 +81,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                   <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a patient" />
+                        <SelectValue placeholder="Sélectionnez un patient" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -106,13 +106,13 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                   <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue placeholder="Sélectionnez le type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="consultation">Consultation</SelectItem>
-                      <SelectItem value="follow-up">Follow-up</SelectItem>
-                      <SelectItem value="emergency">Emergency</SelectItem>
+                      <SelectItem value="follow-up">Suivi</SelectItem>
+                      <SelectItem value="emergency">Urgence</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -125,7 +125,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               name="startTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Start Time</FormLabel>
+                  <FormLabel>Heure de début</FormLabel>
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>
@@ -139,7 +139,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               name="endTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>End Time</FormLabel>
+                  <FormLabel>Heure de fin</FormLabel>
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>
@@ -166,7 +166,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               {createAppointment.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create Appointment
+              Créer le rendez-vous
             </Button>
           </form>
         </Form>
