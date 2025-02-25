@@ -3,7 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { EventDragStartArg, EventDropArg } from "@fullcalendar/interaction";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,15 +36,16 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
-      console.log("Moving availability:", {
-        id: data.id,
-        startTime: data.startTime.toISOString(),
-        endTime: data.endTime.toISOString(),
-      });
+      const startTime = new Date(data.startTime);
+      const endTime = new Date(data.endTime);
+
+      if (startTime >= endTime) {
+        throw new Error("La date de début doit être antérieure à la date de fin");
+      }
 
       const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
-        startTime: data.startTime.toISOString(),
-        endTime: data.endTime.toISOString(),
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
       });
 
       if (!res.ok) {
@@ -132,18 +133,25 @@ export function DoctorsSchedule() {
     setSelectedEvent(event);
   };
 
-  const handleEventDrop = (info: any) => {
-    const eventId = parseInt(info.event.id);
+  const handleEventDrop = (info: EventDropArg) => {
+    try {
+      const eventId = parseInt(info.event.id);
+      const startTime = info.event.start;
+      const endTime = info.event.end;
 
-    // S'assurer que start et end sont des objets Date valides
-    const startTime = new Date(info.event.start);
-    const endTime = new Date(info.event.end);
+      if (!startTime || !endTime) {
+        throw new Error("Dates invalides");
+      }
 
-    updateAvailability.mutate({
-      id: eventId,
-      startTime,
-      endTime,
-    });
+      updateAvailability.mutate({
+        id: eventId,
+        startTime,
+        endTime,
+      });
+    } catch (error) {
+      console.error("Error in handleEventDrop:", error);
+      info.revert();
+    }
   };
 
   return (
@@ -190,6 +198,8 @@ export function DoctorsSchedule() {
           .fc-event {
             cursor: move !important;
             transition: transform 0.1s, box-shadow 0.1s;
+            border-radius: 4px !important;
+            margin: 1px !important;
           }
           .fc-event:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -214,55 +224,14 @@ export function DoctorsSchedule() {
             background: rgba(0, 120, 255, 0.1) !important;
             border: 2px dashed rgba(0, 120, 255, 0.4) !important;
           }
-          .fc-event-dragging-ghost {
-            opacity: 0.8;
-          }
-          .fc-event-selected {
-            box-shadow: 0 0 0 2px #3b82f6 !important;
-          }
-          .fc-timegrid-col-events {
-            margin: 0 2px !important;
-          }
-          .fc-timegrid-event {
-            margin: 1px 0 !important;
-            border-radius: 4px !important;
-          }
-          .fc-timegrid-now-indicator-line {
-            border-color: #ef4444 !important;
-            border-width: 2px !important;
-          }
-          /* Amélioration de l'effet d'aimantation */
           .fc-day {
             transition: background-color 0.2s !important;
           }
           .fc-day.fc-day-today {
             background-color: rgba(0, 120, 255, 0.05) !important;
           }
-          .fc-timeline-slot.fc-timeline-slot-emphasize {
-            background-color: rgba(0, 120, 255, 0.05) !important;
-          }
-          .fc-time-grid .fc-slats td {
-            transition: background-color 0.2s !important;
-          }
-          .fc-time-grid .fc-slats td.fc-highlight {
-            background-color: rgba(0, 120, 255, 0.1) !important;
-          }
-          .fc-event.is-dragging {
-            opacity: 0.9 !important;
-            transform: scale(1.05) !important;
-          }
-          .fc-time-grid .fc-content-skeleton {
-            z-index: 3 !important;
-          }
-          .fc-timeline-event {
-            transition: all 0.2s !important;
-          }
-          .fc-timeline-event:hover {
-            transform: translateY(-1px) !important;
-          }
-          /* Améliorer la zone de drop */
           .fc-timegrid-col {
-            transition: background-color 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
           }
           .fc-timegrid-col.drop-highlight {
             background-color: rgba(59, 130, 246, 0.1);
@@ -302,41 +271,15 @@ export function DoctorsSchedule() {
             minute: '2-digit',
             hour12: false
           }}
-          snapDuration="00:15:00"          // Snap précis à 15 minutes
-          eventResizableFromStart={true}   // Permet le redimensionnement depuis le début
-          eventDurationEditable={true}     // Permet le redimensionnement
-          eventOverlap={false}             // Empêche le chevauchement
-          eventResize={handleEventDrop}    // Même gestionnaire pour le redimensionnement
-          dragRevertDuration={200}         // Animation d'annulation plus rapide
-          eventDragMinDistance={3}         // Distance minimale réduite
-          nowIndicator={true}              // Indicateur d'heure actuelle
-          longPressDelay={100}             // Délai réduit pour le drag & drop sur mobile
-          slotEventOverlap={false}         // Empêche le chevauchement dans les slots
-          eventDidMount={(info) => {       // Ajouter des tooltips et des styles
+          snapDuration="00:15:00"
+          eventResizableFromStart={true}
+          eventDurationEditable={true}
+          eventOverlap={false}
+          nowIndicator={true}
+          slotEventOverlap={false}
+          eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
             info.el.style.cursor = 'grab';
-            info.el.classList.add('fc-event-draggable');
-          }}
-          dragStart={(info) => {
-            // Ajouter une classe pour le style pendant le drag
-            info.el.classList.add('fc-event-dragging');
-
-            // Ajouter des effets visuels aux colonnes
-            document.querySelectorAll('.fc-timegrid-col').forEach((col: Element) => {
-              col.addEventListener('dragenter', () => {
-                col.classList.add('drop-highlight');
-              });
-              col.addEventListener('dragleave', () => {
-                col.classList.remove('drop-highlight');
-              });
-            });
-          }}
-          dragStop={(info) => {
-            // Nettoyer les effets visuels
-            info.el.classList.remove('fc-event-dragging');
-            document.querySelectorAll('.fc-timegrid-col').forEach((col: Element) => {
-              col.classList.remove('drop-highlight');
-            });
           }}
         />
       </div>
