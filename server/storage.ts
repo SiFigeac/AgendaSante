@@ -1,4 +1,4 @@
-import { users, patients, appointments, availability, type User, type InsertUser, type Patient, type InsertPatient, type Appointment, type InsertAppointment, type Availability, type InsertAvailability } from "@shared/schema";
+import { users, patients, appointments, availability as availabilityTable, type User, type InsertUser, type Patient, type InsertPatient, type Appointment, type InsertAppointment, type Availability, type InsertAvailability } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -165,44 +165,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAvailability(insertAvailability: InsertAvailability): Promise<Availability> {
-    const [availability] = await db
-      .insert(availability)
+    const [newAvailability] = await db
+      .insert(availabilityTable)
       .values(insertAvailability)
       .returning();
-    return availability;
+    return newAvailability;
   }
 
   async getAvailability(id: number): Promise<Availability | undefined> {
     const [avail] = await db
       .select()
-      .from(availability)
-      .where(eq(availability.id, id));
+      .from(availabilityTable)
+      .where(eq(availabilityTable.id, id));
     return avail;
   }
 
   async getAvailabilities(): Promise<Availability[]> {
-    return await db.select().from(availability);
+    return await db.select().from(availabilityTable);
   }
 
   async getAvailabilitiesByDoctor(doctorId: number): Promise<Availability[]> {
     return await db
       .select()
-      .from(availability)
-      .where(eq(availability.doctorId, doctorId));
+      .from(availabilityTable)
+      .where(eq(availabilityTable.doctorId, doctorId));
   }
 
   async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
     const [avail] = await db
-      .update(availability)
+      .update(availabilityTable)
       .set(update)
-      .where(eq(availability.id, id))
+      .where(eq(availabilityTable.id, id))
       .returning();
     if (!avail) throw new Error("Availability not found");
     return avail;
   }
 
   async deleteAvailability(id: number): Promise<void> {
-    await db.delete(availability).where(eq(availability.id, id));
+    await db.delete(availabilityTable).where(eq(availabilityTable.id, id));
   }
 }
 
