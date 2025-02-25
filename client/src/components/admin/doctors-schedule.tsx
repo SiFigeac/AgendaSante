@@ -5,10 +5,25 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function DoctorsSchedule() {
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
 
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -33,22 +48,65 @@ export function DoctorsSchedule() {
     backgroundColor: availability.isBooked ? '#94a3b8' : '#22c55e',
   }));
 
+  const selectedDoctorName = doctors?.find(d => d.id === selectedDoctor)
+    ? `${doctors.find(d => d.id === selectedDoctor)?.firstName} ${doctors.find(d => d.id === selectedDoctor)?.lastName}`
+    : "Tous les médecins";
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Select onValueChange={(value) => setSelectedDoctor(value ? parseInt(value) : null)} value={selectedDoctor?.toString() || ""}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Tous les médecins" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Tous les médecins</SelectItem>
-            {doctors?.map((doctor) => (
-              <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                {doctor.firstName} {doctor.lastName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-[250px] justify-between"
+            >
+              {selectedDoctorName}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[250px] p-0">
+            <Command>
+              <CommandInput placeholder="Rechercher un médecin..." />
+              <CommandEmpty>Aucun médecin trouvé.</CommandEmpty>
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    setSelectedDoctor(null);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      !selectedDoctor ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  Tous les médecins
+                </CommandItem>
+                {doctors?.map((doctor) => (
+                  <CommandItem
+                    key={doctor.id}
+                    onSelect={() => {
+                      setSelectedDoctor(doctor.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedDoctor === doctor.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {doctor.firstName} {doctor.lastName}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="rounded-md border">
