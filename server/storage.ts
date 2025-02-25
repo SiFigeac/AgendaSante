@@ -1,4 +1,4 @@
-import { users, patients, appointments, type User, type InsertUser, type Patient, type InsertPatient, type Appointment, type InsertAppointment } from "@shared/schema";
+import { users, patients, appointments, availability, type User, type InsertUser, type Patient, type InsertPatient, type Appointment, type InsertAppointment, type Availability, type InsertAvailability } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -8,9 +8,12 @@ import { pool } from "./db";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsers(): Promise<User[]>;
+  updateUser(id: number, user: Partial<User>): Promise<User>;
 
   // Patient operations
   createPatient(patient: InsertPatient): Promise<Patient>;
@@ -28,9 +31,13 @@ export interface IStorage {
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
-  // Méthodes d'administration
-  getUsers(): Promise<User[]>;
-  updateUser(id: number, user: Partial<User>): Promise<User>;
+  // Availability operations
+  createAvailability(availability: InsertAvailability): Promise<Availability>;
+  getAvailability(id: number): Promise<Availability | undefined>;
+  getAvailabilities(): Promise<Availability[]>;
+  getAvailabilitiesByDoctor(doctorId: number): Promise<Availability[]>;
+  updateAvailability(id: number, availability: Partial<Availability>): Promise<Availability>;
+  deleteAvailability(id: number): Promise<void>;
 
   sessionStore: session.Store;
 }
@@ -155,6 +162,47 @@ export class DatabaseStorage implements IStorage {
       .returning();
     if (!user) throw new Error("User not found");
     return user;
+  }
+
+  async createAvailability(insertAvailability: InsertAvailability): Promise<Availability> {
+    const [availability] = await db
+      .insert(availability)
+      .values(insertAvailability)
+      .returning();
+    return availability;
+  }
+
+  async getAvailability(id: number): Promise<Availability | undefined> {
+    const [avail] = await db
+      .select()
+      .from(availability)
+      .where(eq(availability.id, id));
+    return avail;
+  }
+
+  async getAvailabilities(): Promise<Availability[]> {
+    return await db.select().from(availability);
+  }
+
+  async getAvailabilitiesByDoctor(doctorId: number): Promise<Availability[]> {
+    return await db
+      .select()
+      .from(availability)
+      .where(eq(availability.doctorId, doctorId));
+  }
+
+  async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
+    const [avail] = await db
+      .update(availability)
+      .set(update)
+      .where(eq(availability.id, id))
+      .returning();
+    if (!avail) throw new Error("Availability not found");
+    return avail;
+  }
+
+  async deleteAvailability(id: number): Promise<void> {
+    await db.delete(availability).where(eq(availability.id, id));
   }
 }
 

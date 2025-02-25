@@ -7,7 +7,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
-  role: text("role", { enum: ["doctor", "staff"] }).notNull(),
+  role: text("role", { enum: ["doctor", "staff", "admin"] }).notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
 });
 
@@ -28,8 +28,17 @@ export const appointments = pgTable("appointments", {
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   type: text("type").notNull(),
+  motif: text("motif"),
   status: text("status", { enum: ["scheduled", "confirmed", "cancelled"] }).notNull(),
   notes: text("notes"),
+});
+
+export const availability = pgTable("availability", {
+  id: serial("id").primaryKey(),
+  doctorId: integer("doctor_id").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isBooked: boolean("is_booked").notNull().default(false),
 });
 
 // Modification du schéma de validation pour les dates
@@ -48,9 +57,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertPatientSchema = createInsertSchema(patients);
 
+export const insertAvailabilitySchema = createInsertSchema(availability, {
+  startTime: z.string().transform((str) => new Date(str)),
+  endTime: z.string().transform((str) => new Date(str)),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+export type Availability = typeof availability.$inferSelect;
+export type InsertAvailability = z.infer<typeof insertAvailabilitySchema>;

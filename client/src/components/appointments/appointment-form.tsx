@@ -27,10 +27,14 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     queryKey: ["/api/patients"],
   });
 
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/users"],
+    select: (users) => users.filter(u => u.role === "doctor"),
+  });
+
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
     defaultValues: {
-      doctorId: user?.id,
       startTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
       status: "scheduled" as const,
@@ -109,6 +113,31 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
             <FormField
               control={form.control}
+              name="doctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Médecin</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un médecin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {doctors?.map((doctor) => (
+                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                          {doctor.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem>
@@ -125,6 +154,20 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                       <SelectItem value="emergency">Urgence</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="motif"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Motif de la consultation</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Décrivez le motif de la consultation" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
