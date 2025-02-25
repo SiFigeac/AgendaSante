@@ -197,6 +197,13 @@ export function DoctorsSchedule() {
           eventClick={handleEventClick}
           editable={true}
           eventDrop={handleEventDrop}
+          dragScroll={true}
+          dayMaxEvents={true}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
         />
       </div>
 
