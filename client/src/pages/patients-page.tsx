@@ -37,8 +37,8 @@ export default function PatientsPage() {
       const month = digitsOnly.slice(2, 4);
       const year = digitsOnly.slice(4);
       // Si l'année est sur 2 chiffres, on ajoute 2000 ou 1900 selon la valeur
-      const fullYear = year.length === 2 
-        ? (parseInt(year) > 23 ? '19' : '20') + year 
+      const fullYear = year.length === 2
+        ? (parseInt(year) > 23 ? '19' : '20') + year
         : year;
       return `${day}/${month}/${fullYear}`;
     }
@@ -99,7 +99,7 @@ export default function PatientsPage() {
             </TableHeader>
             <TableBody>
               {filteredPatients?.map((patient) => (
-                <TableRow 
+                <TableRow
                   key={patient.id}
                   className="cursor-pointer hover:bg-accent"
                   onClick={() => setSelectedPatient(patient)}
