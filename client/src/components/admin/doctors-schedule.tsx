@@ -5,7 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { User, Availability } from "@shared/schema";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -17,23 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAvailabilitySchema } from "@shared/schema";
 import { Loader2 } from "lucide-react";
-import { addHours } from "date-fns";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
-
-  const form = useForm({
-    resolver: zodResolver(insertAvailabilitySchema),
-  });
 
   const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
@@ -44,14 +34,36 @@ export function DoctorsSchedule() {
     queryKey: ["/api/availability"],
   });
 
-  // Surveiller les changements de la date de début pour mettre à jour la date de fin
-  const startTime = form.watch("startTime");
-  useEffect(() => {
-    if (startTime) {
-      const newEndTime = addHours(new Date(startTime), 1);
-      form.setValue("endTime", newEndTime.toISOString().slice(0, 16));
-    }
-  }, [startTime, form]);
+  const updateAvailability = useMutation({
+    mutationFn: async (data: { id: number, startTime: string, endTime: string }) => {
+      console.log("Moving availability:", data);
+      const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
+        startTime: data.startTime,
+        endTime: data.endTime,
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Succès",
+        description: "La plage horaire a été déplacée",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const deleteAvailability = useMutation({
     mutationFn: async (id: number) => {
@@ -67,55 +79,6 @@ export function DoctorsSchedule() {
         description: "La plage horaire a été supprimée",
       });
       setSelectedEvent(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateAvailability = useMutation({
-    mutationFn: async (data: any) => {
-      if (!selectedEvent?.id) {
-        throw new Error("Aucune plage horaire sélectionnée");
-      }
-
-      const startDate = new Date(data.startTime);
-      const endDate = new Date(data.endTime);
-
-      if (startDate >= endDate) {
-        throw new Error("La date de début doit être antérieure à la date de fin");
-      }
-
-      console.log("Updating availability:", selectedEvent.id, {
-        startTime: startDate.toISOString(),
-        endTime: endDate.toISOString(),
-      });
-
-      const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
-        startTime: startDate.toISOString(),
-        endTime: endDate.toISOString(),
-      });
-
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error);
-      }
-
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
-      toast({
-        title: "Succès",
-        description: "La plage horaire a été modifiée",
-      });
-      setSelectedEvent(null);
-      setIsEditing(false);
-      form.reset();
     },
     onError: (error: Error) => {
       toast({
@@ -162,26 +125,22 @@ export function DoctorsSchedule() {
       isBooked: info.event.extendedProps.isBooked,
     };
     setSelectedEvent(event);
-    setIsEditing(false);
-
-    form.reset({
-      startTime: event.start.toISOString().slice(0, 16),
-      endTime: event.end.toISOString().slice(0, 16)
-    });
   };
 
-  const handleSubmit = async (data: any) => {
-    console.log("Form submitted with data:", data);
-    try {
-      await updateAvailability.mutateAsync(data);
-    } catch (error) {
-      console.error("Error updating availability:", error);
-    }
+  const handleEventDrop = (info: any) => {
+    const eventId = parseInt(info.event.id);
+    const startTime = info.event.start.toISOString();
+    const endTime = info.event.end.toISOString();
+
+    updateAvailability.mutate({
+      id: eventId,
+      startTime,
+      endTime,
+    });
   };
 
   return (
     <div className="space-y-4">
-      {/* La barre de recherche et le calendrier restent inchangés */}
       <div className="flex gap-4 justify-end">
         <div className="flex gap-2 items-center">
           <Input
@@ -236,113 +195,46 @@ export function DoctorsSchedule() {
           height="auto"
           slotDuration="00:15:00"
           eventClick={handleEventClick}
+          editable={true}
+          eventDrop={handleEventDrop}
         />
       </div>
 
       {selectedEvent && (
         <Dialog
           open={!!selectedEvent}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedEvent(null);
-              setIsEditing(false);
-              form.reset();
-            }
-          }}
+          onOpenChange={(open) => !open && setSelectedEvent(null)}
         >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Plage horaire</DialogTitle>
-              {!isEditing ? (
-                <DialogDescription>
-                  {selectedEvent?.title}
-                  <br />
-                  Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
-                  <br />
-                  Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
-                </DialogDescription>
-              ) : (
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="startTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date et heure de début</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="datetime-local"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="endTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date et heure de fin</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="datetime-local"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        Annuler
-                      </Button>
-                      <Button type="submit" disabled={updateAvailability.isPending}>
-                        {updateAvailability.isPending && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Modifier
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              )}
+              <DialogDescription>
+                {selectedEvent?.title}
+                <br />
+                Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
+                <br />
+                Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
+              </DialogDescription>
             </DialogHeader>
 
-            {!isEditing && (
-              <div className="flex justify-end gap-2 mt-4">
-                {!selectedEvent?.isBooked && (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      Modifier
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
-                    >
-                      Supprimer
-                    </Button>
-                  </>
-                )}
-                <Button variant="outline" onClick={() => setSelectedEvent(null)}>
-                  Fermer
+            <div className="flex justify-end gap-2 mt-4">
+              {!selectedEvent?.isBooked && (
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
+                  disabled={deleteAvailability.isPending}
+                >
+                  {deleteAvailability.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Supprimer"
+                  )}
                 </Button>
-              </div>
-            )}
+              )}
+              <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+                Fermer
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       )}
