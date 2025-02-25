@@ -22,6 +22,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAvailabilitySchema } from "@shared/schema";
 import { Loader2 } from "lucide-react";
+import { addHours } from "date-fns";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +43,16 @@ export function DoctorsSchedule() {
   const form = useForm({
     resolver: zodResolver(insertAvailabilitySchema),
   });
+
+  // Surveiller les changements de la date de début pour mettre à jour la date de fin
+  const startTime = form.watch("startTime");
+  if (startTime) {
+    const endTime = form.watch("endTime");
+    if (!endTime) {
+      const newEndTime = addHours(new Date(startTime), 1);
+      form.setValue("endTime", newEndTime.toISOString().slice(0, 16));
+    }
+  }
 
   const deleteAvailability = useMutation({
     mutationFn: async (id: number) => {
@@ -116,7 +127,7 @@ export function DoctorsSchedule() {
       title: doctor ? formatDoctorName(doctor) : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: doctor?.color,
+      backgroundColor: doctor?.color || '#22c55e',
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
