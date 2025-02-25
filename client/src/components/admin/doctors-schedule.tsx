@@ -79,7 +79,7 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Updating availability with data:", data); // Debug log
+      console.log("Updating availability with data:", data);
       const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
         startTime: new Date(data.startTime).toISOString(),
         endTime: new Date(data.endTime).toISOString(),
@@ -212,108 +212,115 @@ export function DoctorsSchedule() {
         />
       </div>
 
-      <Dialog open={!!selectedEvent} onOpenChange={() => {
-        setSelectedEvent(null);
-        setIsEditing(false);
-        form.reset();
-      }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Plage horaire</DialogTitle>
-            {!isEditing ? (
-              <DialogDescription>
-                {selectedEvent?.title}
-                <br />
-                Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
-                <br />
-                Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
-              </DialogDescription>
-            ) : (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((data) => updateAvailability.mutate(data))}
-                  className="space-y-4 mt-4"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="startTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date et heure de début</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+      {selectedEvent && (
+        <Dialog 
+          open={!!selectedEvent} 
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedEvent(null);
+              setIsEditing(false);
+              form.reset();
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Plage horaire</DialogTitle>
+              {!isEditing ? (
+                <DialogDescription>
+                  {selectedEvent?.title}
+                  <br />
+                  Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
+                  <br />
+                  Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
+                </DialogDescription>
+              ) : (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((data) => updateAvailability.mutate(data))}
+                    className="space-y-4 mt-4"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="startTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date et heure de début</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="endTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date et heure de fin</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="endTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date et heure de fin</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                  <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="submit" disabled={updateAvailability.isPending}>
+                        {updateAvailability.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Modifier
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
+            </DialogHeader>
+            {!isEditing && (
+              <div className="flex justify-end gap-2 mt-4">
+                {!selectedEvent?.isBooked && (
+                  <>
                     <Button
-                      type="button"
                       variant="outline"
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => setIsEditing(true)}
                     >
-                      Annuler
-                    </Button>
-                    <Button type="submit" disabled={updateAvailability.isPending}>
-                      {updateAvailability.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
                       Modifier
                     </Button>
-                  </div>
-                </form>
-              </Form>
+                    <Button
+                      variant="destructive"
+                      onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
+                    >
+                      Supprimer
+                    </Button>
+                  </>
+                )}
+                <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+                  Fermer
+                </Button>
+              </div>
             )}
-          </DialogHeader>
-          {!isEditing && (
-            <div className="flex justify-end gap-2 mt-4">
-              {!selectedEvent?.isBooked && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
-                  >
-                    Supprimer
-                  </Button>
-                </>
-              )}
-              <Button variant="outline" onClick={() => setSelectedEvent(null)}>
-                Fermer
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
