@@ -6,17 +6,18 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { fr } from 'date-fns/locale';
 import type { Appointment, Patient } from "@shared/schema";
 import { DayPreviewDialog } from './day-preview-dialog';
+import { AppointmentDetailDialog } from '@/components/appointments/appointment-detail-dialog';
 
 interface FullCalendarProps {
   appointments: Appointment[];
   patients: Patient[];
   onDateSelect: (date: Date) => void;
-  onEventClick: (appointment: Appointment) => void;
 }
 
-export function AppointmentCalendar({ appointments, patients, onDateSelect, onEventClick }: FullCalendarProps) {
+export function AppointmentCalendar({ appointments, patients, onDateSelect }: FullCalendarProps) {
   const [showDayPreview, setShowDayPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const events = appointments?.map(apt => {
     const patient = patients?.find(p => p.id === apt.patientId);
@@ -39,6 +40,10 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect, onEv
   const handleDateClick = (info: { date: Date }) => {
     setSelectedDate(info.date);
     setShowDayPreview(true);
+  };
+
+  const handleEventClick = (info: { event: any }) => {
+    setSelectedAppointment(info.event.extendedProps.appointment);
   };
 
   return (
@@ -68,7 +73,7 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect, onEv
           dayMaxEvents={true}
           weekends={true}
           select={(info) => onDateSelect(info.start)}
-          eventClick={(info) => onEventClick(info.event.extendedProps.appointment)}
+          eventClick={handleEventClick}
           dateClick={handleDateClick}
           height="auto"
         />
@@ -81,6 +86,14 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect, onEv
         appointments={appointments}
         patients={patients}
       />
+
+      {selectedAppointment && (
+        <AppointmentDetailDialog
+          open={!!selectedAppointment}
+          onOpenChange={(open) => !open && setSelectedAppointment(null)}
+          appointment={selectedAppointment}
+        />
+      )}
     </>
   );
 }
