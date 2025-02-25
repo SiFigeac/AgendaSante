@@ -26,6 +26,31 @@ export default function PatientsPage() {
     queryKey: ["/api/patients"],
   });
 
+  // Fonction pour formater automatiquement la date
+  const formatDateInput = (input: string) => {
+    // Enlever les / existants
+    const digitsOnly = input.replace(/\//g, '');
+
+    // Si l'entrée contient 6 ou 8 chiffres consécutifs, on la traite comme une date
+    if (/^\d{6,8}$/.test(digitsOnly)) {
+      const day = digitsOnly.slice(0, 2);
+      const month = digitsOnly.slice(2, 4);
+      const year = digitsOnly.slice(4);
+      // Si l'année est sur 2 chiffres, on ajoute 2000 ou 1900 selon la valeur
+      const fullYear = year.length === 2 
+        ? (parseInt(year) > 23 ? '19' : '20') + year 
+        : year;
+      return `${day}/${month}/${fullYear}`;
+    }
+    return input;
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    const formattedInput = formatDateInput(input);
+    setSearchTerm(formattedInput);
+  };
+
   // Filtrer les patients en fonction de la recherche
   const filteredPatients = patients?.filter(patient => {
     const searchLower = searchTerm.toLowerCase();
@@ -54,9 +79,9 @@ export default function PatientsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par nom, prénom ou date de naissance..."
+              placeholder="Rechercher par nom, prénom ou date de naissance (jj/mm/aaaa)..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10"
             />
           </div>
