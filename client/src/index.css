@@ -11,3 +11,50 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Styles pour FullCalendar */
+.fc {
+  @apply h-full;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  @apply border-border;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  @apply border-border;
+}
+
+.fc .fc-button {
+  @apply bg-primary text-primary-foreground shadow hover:bg-primary/90;
+  @apply border-0 rounded-md px-4 py-2;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  @apply bg-primary/80;
+}
+
+.fc .fc-button-primary:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-xl font-semibold capitalize;
+}
+
+.fc .fc-view-harness {
+  @apply bg-card;
+}
+
+.fc .fc-day-today {
+  @apply bg-muted/50 !important;
+}
+
+.fc .fc-timegrid-slot-label {
+  @apply text-muted-foreground;
+}
+
+.fc .fc-timegrid-axis {
+  @apply text-muted-foreground;
+}
