@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { fr } from 'date-fns/locale';
 import type { Appointment, Patient } from "@shared/schema";
+import { DayPreviewDialog } from './day-preview-dialog';
 
 interface FullCalendarProps {
   appointments: Appointment[];
@@ -14,10 +15,13 @@ interface FullCalendarProps {
 }
 
 export function AppointmentCalendar({ appointments, patients, onDateSelect, onEventClick }: FullCalendarProps) {
+  const [showDayPreview, setShowDayPreview] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
   const events = appointments?.map(apt => {
     const patient = patients?.find(p => p.id === apt.patientId);
     const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
-    
+
     return {
       id: apt.id.toString(),
       title: `${patientName} - ${apt.type === 'consultation' ? 'Consultation' : apt.type === 'follow-up' ? 'Suivi' : 'Urgence'}`,
@@ -32,35 +36,51 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect, onEv
     };
   }) || [];
 
+  const handleDateClick = (info: { date: Date }) => {
+    setSelectedDate(info.date);
+    setShowDayPreview(true);
+  };
+
   return (
-    <div className='fc-theme-standard'>
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
-        locale="fr"
-        buttonText={{
-          today: "Aujourd'hui",
-          month: 'Mois',
-          week: 'Semaine',
-          day: 'Jour',
-        }}
-        slotMinTime="08:00:00"
-        slotMaxTime="20:00:00"
-        allDaySlot={false}
-        events={events}
-        selectable={true}
-        selectMirror={true}
-        dayMaxEvents={true}
-        weekends={true}
-        select={(info) => onDateSelect(info.start)}
-        eventClick={(info) => onEventClick(info.event.extendedProps.appointment)}
-        height="auto"
+    <>
+      <div className='fc-theme-standard'>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          locale="fr"
+          buttonText={{
+            today: "Aujourd'hui",
+            month: 'Mois',
+            week: 'Semaine',
+            day: 'Jour',
+          }}
+          slotMinTime="08:00:00"
+          slotMaxTime="20:00:00"
+          allDaySlot={false}
+          events={events}
+          selectable={true}
+          selectMirror={true}
+          dayMaxEvents={true}
+          weekends={true}
+          select={(info) => onDateSelect(info.start)}
+          eventClick={(info) => onEventClick(info.event.extendedProps.appointment)}
+          dateClick={handleDateClick}
+          height="auto"
+        />
+      </div>
+
+      <DayPreviewDialog
+        open={showDayPreview}
+        onOpenChange={setShowDayPreview}
+        date={selectedDate}
+        appointments={appointments}
+        patients={patients}
       />
-    </div>
+    </>
   );
 }
