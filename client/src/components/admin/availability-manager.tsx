@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { User, Availability } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -52,13 +52,12 @@ export function AvailabilityManager() {
 
   // Surveiller les changements de la date de début pour mettre à jour la date de fin
   const startTime = form.watch("startTime");
-  if (startTime) {
-    const endTime = form.watch("endTime");
-    if (!endTime) {
+  useEffect(() => {
+    if (startTime) {
       const newEndTime = addHours(new Date(startTime), 1);
       form.setValue("endTime", newEndTime.toISOString().slice(0, 16));
     }
-  }
+  }, [startTime, form]);
 
   const createAvailability = useMutation({
     mutationFn: async (data: any) => {
