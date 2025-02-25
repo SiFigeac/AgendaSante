@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAppointmentSchema, type Appointment, type Patient } from "@shared/schema";
+import { insertAppointmentSchema, type Appointment } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, addHours } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 interface AppointmentDetailDialogProps {
   open: boolean;
@@ -31,6 +32,12 @@ export function AppointmentDetailDialog({
     queryKey: ["/api/patients"],
   });
 
+  // Trouver le patient actuel
+  const currentPatient = patients?.find(p => p.id === appointment.patientId);
+  const patientName = currentPatient 
+    ? `${currentPatient.firstName} ${currentPatient.lastName}`
+    : 'Patient inconnu';
+
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
     defaultValues: {
@@ -43,6 +50,16 @@ export function AppointmentDetailDialog({
       notes: appointment.notes || "",
     },
   });
+
+  // Mettre à jour la date de fin quand la date de début change
+  const startTime = form.watch("startTime");
+  useEffect(() => {
+    if (startTime) {
+      const startDate = new Date(startTime);
+      const endDate = addHours(startDate, 1); // Par défaut, ajoute 1 heure
+      form.setValue("endTime", format(endDate, "yyyy-MM-dd'T'HH:mm"));
+    }
+  }, [startTime, form]);
 
   const updateAppointment = useMutation({
     mutationFn: async (data) => {
@@ -100,7 +117,7 @@ export function AppointmentDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Détails du rendez-vous</DialogTitle>
+          <DialogTitle>Détails du rendez-vous - {patientName}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -108,31 +125,6 @@ export function AppointmentDetailDialog({
             onSubmit={form.handleSubmit((data) => updateAppointment.mutate(data))}
             className="space-y-4"
           >
-            <FormField
-              control={form.control}
-              name="patientId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Patient</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un patient" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {patients?.map((patient) => (
-                        <SelectItem key={patient.id} value={patient.id.toString()}>
-                          {patient.firstName} {patient.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="type"
@@ -184,7 +176,7 @@ export function AppointmentDetailDialog({
               name="startTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Heure de début</FormLabel>
+                  <FormLabel>Date et heure du rendez-vous</FormLabel>
                   <FormControl>
                     <Input 
                       type="datetime-local" 
@@ -202,7 +194,7 @@ export function AppointmentDetailDialog({
               name="endTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Heure de fin</FormLabel>
+                  <FormLabel>Date et heure de fin du rendez-vous</FormLabel>
                   <FormControl>
                     <Input 
                       type="datetime-local" 
