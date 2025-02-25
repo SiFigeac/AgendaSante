@@ -42,17 +42,21 @@ export function AvailabilityManager() {
 
   const createAvailability = useMutation({
     mutationFn: async (data: any) => {
+      if (!selectedDoctor) {
+        throw new Error("Veuillez sélectionner un médecin");
+      }
+
       // Convertir les dates en format ISO
       const formattedData = {
-        ...data,
+        doctorId: selectedDoctor,
         startTime: new Date(data.startTime).toISOString(),
         endTime: new Date(data.endTime).toISOString(),
-        doctorId: selectedDoctor,
       };
 
       const res = await apiRequest("POST", "/api/availability", formattedData);
       if (!res.ok) {
-        throw new Error(await res.text());
+        const error = await res.text();
+        throw new Error(error);
       }
       return res.json();
     },
@@ -82,7 +86,7 @@ export function AvailabilityManager() {
 
   // Formater le nom du médecin
   const formatDoctorName = (doctor: User) => {
-    return `Dr ${doctor.lastName.toUpperCase()} ${doctor.firstName}`;
+    return `${doctor.lastName} ${doctor.firstName}`;
   };
 
   const selectedDoctorInfo = doctors?.find(d => d.id === selectedDoctor);

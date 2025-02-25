@@ -43,7 +43,7 @@ export function DoctorsSchedule() {
 
   // Formater le nom du médecin
   const formatDoctorName = (doctor: User) => {
-    return `Dr ${doctor.lastName.toUpperCase()} ${doctor.firstName}`;
+    return `${doctor.lastName} ${doctor.firstName}`;
   };
 
   return (
