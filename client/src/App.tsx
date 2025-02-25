@@ -7,6 +7,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import PatientsPage from "@/pages/patients-page";
 import CalendarPage from "@/pages/calendar-page";
+import AdminPage from "@/pages/admin-page";
 import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -17,6 +18,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/patients" component={PatientsPage} />
       <ProtectedRoute path="/calendar" component={CalendarPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -6,7 +6,8 @@ import {
   Calendar, 
   Users, 
   Home,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 
 export function SidebarNav() {
@@ -17,6 +18,7 @@ export function SidebarNav() {
     { name: "Tableau de bord", href: "/", icon: Home },
     { name: "Calendrier", href: "/calendar", icon: Calendar },
     { name: "Patients", href: "/patients", icon: Users },
+    ...(user?.isAdmin ? [{ name: "Administration", href: "/admin", icon: Settings }] : []),
   ];
 
   return (
@@ -48,6 +50,7 @@ export function SidebarNav() {
             <p className="text-sm font-medium">{user?.fullName}</p>
             <p className="text-xs text-muted-foreground capitalize">
               {user?.role === 'doctor' ? 'Médecin' : 'Personnel'}
+              {user?.isAdmin && ' (Admin)'}
             </p>
           </div>
         </div>

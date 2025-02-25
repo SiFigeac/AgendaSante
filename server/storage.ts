@@ -28,6 +28,10 @@ export interface IStorage {
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
+  // Méthodes d'administration
+  getUsers(): Promise<User[]>;
+  updateUser(id: number, user: Partial<User>): Promise<User>;
+
   sessionStore: session.Store;
 }
 
@@ -130,6 +134,20 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAppointment(id: number): Promise<void> {
     await db.delete(appointments).where(eq(appointments.id, id));
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async updateUser(id: number, update: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(update)
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) throw new Error("User not found");
+    return user;
   }
 }
 

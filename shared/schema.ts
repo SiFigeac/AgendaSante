@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
   role: text("role", { enum: ["doctor", "staff"] }).notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
 });
 
 export const patients = pgTable("patients", {
@@ -36,6 +37,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   fullName: true,
   role: true,
+  isAdmin: true,
 });
 
 export const insertPatientSchema = createInsertSchema(patients);

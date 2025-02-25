@@ -4,8 +4,26 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertPatientSchema, insertAppointmentSchema } from "@shared/schema";
 
+function isAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (!req.isAuthenticated()) return res.sendStatus(401);
+  if (!req.user?.isAdmin) return res.sendStatus(403);
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Routes d'administration
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    const users = await storage.getUsers();
+    res.json(users);
+  });
+
+  app.patch("/api/admin/users/:id", isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    const updated = await storage.updateUser(userId, req.body);
+    res.json(updated);
+  });
 
   // Patient routes
   app.get("/api/patients", async (req, res) => {
