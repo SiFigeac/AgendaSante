@@ -24,12 +24,6 @@ function generatePastelColor(): string {
   return `hsl(${hue}, 70%, 80%)`;
 }
 
-const DEFAULT_PERMISSIONS = {
-  doctor: ["view_appointments", "manage_own_appointments"],
-  staff: ["view_appointments", "manage_all_appointments", "manage_patients"],
-  admin: ["view_appointments", "manage_all_appointments", "manage_patients", "manage_users", "manage_system"],
-};
-
 export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
   const { toast } = useToast();
 
@@ -48,6 +42,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
 
   const updateUser = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Updating user with data:", data); 
       const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
       if (!res.ok) {
         const error = await res.text();
@@ -157,28 +152,30 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="color"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Couleur</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input {...field} type="color" className="w-20 h-10" />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => field.onChange(generatePastelColor())}
-                    >
-                      Générer
-                    </Button>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {form.watch("role") === "doctor" && (
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Couleur</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} type="color" className="w-20 h-10" />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => field.onChange(generatePastelColor())}
+                      >
+                        Générer
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

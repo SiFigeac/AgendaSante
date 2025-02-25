@@ -79,6 +79,7 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Updating availability with data:", data); // Debug log
       const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
         startTime: new Date(data.startTime).toISOString(),
         endTime: new Date(data.endTime).toISOString(),
@@ -144,6 +145,7 @@ export function DoctorsSchedule() {
     };
     setSelectedEvent(event);
 
+    // Initialiser le formulaire avec les valeurs actuelles
     if (event.start && event.end) {
       form.setValue("startTime", event.start.toISOString().slice(0, 16));
       form.setValue("endTime", event.end.toISOString().slice(0, 16));
