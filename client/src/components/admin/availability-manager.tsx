@@ -3,7 +3,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -21,12 +20,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { User, Availability } from "@shared/schema";
+import { useState } from "react";
 
 export function AvailabilityManager() {
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
 
   const { data: doctors } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/admin/users"],
     select: (users) => users?.filter(u => u.role === "doctor"),
   });
 
@@ -41,6 +43,9 @@ export function AvailabilityManager() {
   const createAvailability = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/availability", data);
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -50,6 +55,7 @@ export function AvailabilityManager() {
         description: "Plage horaire créée avec succès",
       });
       form.reset();
+      setSelectedDoctor(null);
     },
     onError: (error: Error) => {
       toast({
@@ -60,6 +66,16 @@ export function AvailabilityManager() {
     },
   });
 
+  // Filtrer les médecins en fonction du terme de recherche
+  const filteredDoctors = doctors?.filter(doctor => {
+    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
+
+  const selectedDoctorName = doctors?.find(d => d.id === selectedDoctor)
+    ? `${doctors.find(d => d.id === selectedDoctor)?.firstName} ${doctors.find(d => d.id === selectedDoctor)?.lastName}`
+    : "Sélectionnez un médecin";
+
   return (
     <div className="space-y-6">
       <div className="rounded-md border p-4">
@@ -67,7 +83,7 @@ export function AvailabilityManager() {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => createAvailability.mutate(data))}
+            onSubmit={form.handleSubmit((data) => createAvailability.mutate({...data, doctorId: selectedDoctor}))}
             className="space-y-4"
           >
             <FormField
@@ -76,20 +92,46 @@ export function AvailabilityManager() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un médecin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {doctors?.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                          {doctor.firstName} {doctor.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      placeholder="Rechercher un médecin..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
+                      <div className="border rounded-md p-2 space-y-1">
+                        {filteredDoctors.map(doctor => (
+                          <Button
+                            key={doctor.id}
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              setSelectedDoctor(doctor.id);
+                              field.onChange(doctor.id);
+                              setSearchTerm("");
+                            }}
+                          >
+                            {doctor.firstName} {doctor.lastName}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedDoctor && (
+                      <div className="flex items-center gap-2">
+                        <span>{selectedDoctorName}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedDoctor(null);
+                            field.onChange(null);
+                          }}
+                        >
+                          Changer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -131,7 +173,7 @@ export function AvailabilityManager() {
               />
             </div>
 
-            <Button type="submit" disabled={createAvailability.isPending}>
+            <Button type="submit" disabled={createAvailability.isPending || !selectedDoctor}>
               {createAvailability.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
