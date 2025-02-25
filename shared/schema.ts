@@ -6,9 +6,11 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  fullName: text("full_name").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   role: text("role", { enum: ["doctor", "staff", "admin"] }).notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  permissions: text("permissions").array(),
 });
 
 export const patients = pgTable("patients", {
@@ -50,9 +52,11 @@ export const insertAppointmentSchema = createInsertSchema(appointments, {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
-  fullName: true,
+  firstName: true,
+  lastName: true,
   role: true,
   isAdmin: true,
+  permissions: true,
 });
 
 export const insertPatientSchema = createInsertSchema(patients);

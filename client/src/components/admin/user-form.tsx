@@ -17,6 +17,12 @@ interface UserFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const DEFAULT_PERMISSIONS = {
+  doctor: ["view_appointments", "manage_own_appointments"],
+  staff: ["view_appointments", "manage_all_appointments", "manage_patients"],
+  admin: ["view_appointments", "manage_all_appointments", "manage_patients", "manage_users", "manage_system"],
+};
+
 export function UserForm({ open, onOpenChange }: UserFormProps) {
   const { toast } = useToast();
 
@@ -24,8 +30,17 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       isAdmin: false,
+      permissions: [],
     },
   });
+
+  // Mettre à jour les permissions en fonction du rôle sélectionné
+  const role = form.watch("role");
+  const updatePermissions = (selectedRole: string) => {
+    if (selectedRole) {
+      form.setValue("permissions", DEFAULT_PERMISSIONS[selectedRole as keyof typeof DEFAULT_PERMISSIONS]);
+    }
+  };
 
   const createUser = useMutation({
     mutationFn: async (data: any) => {
@@ -90,19 +105,35 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom complet</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prénom</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -110,7 +141,10 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rôle</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    updatePermissions(value);
+                  }}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez un rôle" />
@@ -119,6 +153,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
                     <SelectContent>
                       <SelectItem value="doctor">Médecin</SelectItem>
                       <SelectItem value="staff">Personnel</SelectItem>
+                      <SelectItem value="admin">Administrateur</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
