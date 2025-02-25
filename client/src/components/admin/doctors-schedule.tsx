@@ -9,7 +9,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -79,14 +78,28 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Updating availability with data:", data);
+      if (!selectedEvent?.id) {
+        throw new Error("Aucune plage horaire sélectionnée");
+      }
+
+      const startDate = new Date(data.startTime);
+      const endDate = new Date(data.endTime);
+
+      if (startDate >= endDate) {
+        throw new Error("La date de début doit être antérieure à la date de fin");
+      }
+
+      console.log("Updating availability:", selectedEvent.id, data);
+
       const res = await apiRequest("PATCH", `/api/availability/${selectedEvent.id}`, {
-        startTime: new Date(data.startTime).toISOString(),
-        endTime: new Date(data.endTime).toISOString(),
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
       });
+
       if (!res.ok) {
         throw new Error("Erreur lors de la modification");
       }
+
       return res.json();
     },
     onSuccess: () => {
@@ -154,6 +167,14 @@ export function DoctorsSchedule() {
   };
 
   const handleModifyClick = () => {
+    if (!selectedEvent) return;
+
+    // Réinitialiser le formulaire avec les valeurs actuelles
+    form.reset({
+      startTime: new Date(selectedEvent.start).toISOString().slice(0, 16),
+      endTime: new Date(selectedEvent.end).toISOString().slice(0, 16)
+    });
+
     setIsEditing(true);
   };
 
