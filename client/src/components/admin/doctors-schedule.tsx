@@ -35,11 +35,16 @@ export function DoctorsSchedule() {
   });
 
   const updateAvailability = useMutation({
-    mutationFn: async (data: { id: number, startTime: string, endTime: string }) => {
-      console.log("Moving availability:", data);
+    mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
+      console.log("Moving availability:", {
+        id: data.id,
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
+      });
+
       const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
-        startTime: data.startTime,
-        endTime: data.endTime,
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
       });
 
       if (!res.ok) {
@@ -129,8 +134,10 @@ export function DoctorsSchedule() {
 
   const handleEventDrop = (info: any) => {
     const eventId = parseInt(info.event.id);
-    const startTime = info.event.start.toISOString();
-    const endTime = info.event.end.toISOString();
+
+    // S'assurer que start et end sont des objets Date valides
+    const startTime = new Date(info.event.start);
+    const endTime = new Date(info.event.end);
 
     updateAvailability.mutate({
       id: eventId,
@@ -253,6 +260,19 @@ export function DoctorsSchedule() {
           .fc-timeline-event:hover {
             transform: translateY(-1px) !important;
           }
+          /* Améliorer la zone de drop */
+          .fc-timegrid-col {
+            transition: background-color 0.2s ease-in-out;
+          }
+          .fc-timegrid-col.drop-highlight {
+            background-color: rgba(59, 130, 246, 0.1);
+          }
+          .fc-timegrid-col.drop-valid {
+            background-color: rgba(34, 197, 94, 0.1);
+          }
+          .fc-timegrid-col.drop-invalid {
+            background-color: rgba(239, 68, 68, 0.1);
+          }
         `}
       </style>
 
@@ -295,7 +315,9 @@ export function DoctorsSchedule() {
           eventDidMount={(info) => {       // Ajouter des tooltips et des styles
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
 
-            // Ajouter des styles pour l'effet d'aimantation
+            info.el.style.cursor = 'grab';
+
+            // Gérer les événements de souris
             info.el.addEventListener('mousedown', () => {
               info.el.style.cursor = 'grabbing';
               info.el.classList.add('is-dragging');
@@ -305,20 +327,26 @@ export function DoctorsSchedule() {
               info.el.style.cursor = 'grab';
               info.el.classList.remove('is-dragging');
             });
+          }}
+          dragStart={(info) => {
+            // Ajouter une classe pour le style pendant le drag
+            info.el.classList.add('fc-event-dragging');
 
-            // Ajout de la gestion du survol pour l'effet d'aimantation
-            info.el.addEventListener('dragover', (e) => {
-              const column = e.target.closest('.fc-timegrid-col');
-              if (column) {
-                column.style.backgroundColor = 'rgba(0, 120, 255, 0.1)';
-              }
+            // Ajouter des effets visuels aux colonnes
+            document.querySelectorAll('.fc-timegrid-col').forEach((col: Element) => {
+              col.addEventListener('dragenter', () => {
+                col.classList.add('drop-highlight');
+              });
+              col.addEventListener('dragleave', () => {
+                col.classList.remove('drop-highlight');
+              });
             });
-
-            info.el.addEventListener('dragleave', (e) => {
-              const column = e.target.closest('.fc-timegrid-col');
-              if (column) {
-                column.style.backgroundColor = '';
-              }
+          }}
+          dragStop={(info) => {
+            // Nettoyer les effets visuels
+            info.el.classList.remove('fc-event-dragging');
+            document.querySelectorAll('.fc-timegrid-col').forEach((col: Element) => {
+              col.classList.remove('drop-highlight');
             });
           }}
         />
