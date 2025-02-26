@@ -22,7 +22,6 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
 
-
 // Fonction pour générer une couleur pastel aléatoire
 function generatePastelColor(): string {
   const hue = Math.floor(Math.random() * 360);
@@ -123,16 +122,20 @@ export function DoctorsSchedule() {
   // Formatage des événements pour le calendrier
   const events = availabilities?.map(availability => {
     const doctor = doctors?.find(d => d.id === availability.doctorId);
+    const color = doctor?.color;
+
     return {
       id: availability.id.toString(),
       title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: doctor?.color,
-      borderColor: doctor?.color,
+      backgroundColor: color,
+      borderColor: color,
+      textColor: '#000000',
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
+        color: color // Stocker la couleur dans les propriétés étendues
       }
     };
   }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
@@ -144,6 +147,7 @@ export function DoctorsSchedule() {
       start: info.event.start,
       end: info.event.end,
       isBooked: info.event.extendedProps.isBooked,
+      color: info.event.extendedProps.color // Récupérer la couleur stockée
     });
   };
 
@@ -252,9 +256,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={false}
+          eventOverlap={true} // Permettre la superposition des événements
           nowIndicator={true}
-          slotEventOverlap={false}
+          slotEventOverlap={true} // Permettre la superposition dans les slots
           eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
           }}
@@ -271,11 +275,11 @@ export function DoctorsSchedule() {
             <DialogHeader>
               <DialogTitle>Plage horaire</DialogTitle>
               <DialogDescription>
-                {selectedEvent?.title}
+                {selectedEvent.title}
                 <br />
-                Du {new Date(selectedEvent?.start).toLocaleString('fr-FR')}
+                Du {new Date(selectedEvent.start).toLocaleString('fr-FR')}
                 <br />
-                Au {new Date(selectedEvent?.end).toLocaleString('fr-FR')}
+                Au {new Date(selectedEvent.end).toLocaleString('fr-FR')}
               </DialogDescription>
             </DialogHeader>
 
