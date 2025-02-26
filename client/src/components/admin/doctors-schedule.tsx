@@ -4,13 +4,6 @@ import { Input } from "@/components/ui/input";
 import type { EventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
-import {
-  Dialog as BaseDialog,
-  DialogContent as BaseDialogContent,
-  DialogDescription,
-  DialogHeader as BaseDialogHeader,
-  DialogTitle as BaseDialogTitle,
-} from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -203,7 +196,7 @@ export function DoctorsSchedule() {
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 0 2px !important;
+            margin: 0 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
           }
@@ -212,18 +205,15 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            left: 2% !important;
-            right: 2% !important;
-            margin: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
           }
           .fc-timegrid-event {
+            margin: 0 2% !important;
             border: none !important;
-            margin: 0 !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
           }
           .fc-v-event {
             border: none !important;
@@ -274,9 +264,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={false}
+          eventOverlap={true}
           nowIndicator={true}
-          slotEventOverlap={false}
+          slotEventOverlap={true}
           forceEventDuration={true}
           displayEventEnd={true}
           slotLabelFormat={{

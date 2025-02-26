@@ -127,53 +127,53 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Rechercher un médecin..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                    />
-                    {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
-                      <div className="border rounded-md p-2 space-y-1 bg-card">
-                        {filteredDoctors.map(doctor => (
-                          <Button
-                            key={doctor.id}
-                            type="button"
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              field.onChange(doctor.id);
-                              setSelectedDoctor(doctor.id);
-                              setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-4 h-4 rounded-full"
-                                style={{ backgroundColor: doctor.color }}
-                              />
-                              {doctor.lastName} {doctor.firstName}
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                    {selectedDoctor && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedDoctor(null);
-                          setSearchTerm("");
-                          field.onChange(null);
-                        }}
-                        className="text-sm"
-                      >
-                        Changer de médecin
-                      </Button>
-                    )}
+                  <div className="flex gap-4 justify-end">
+                    <div className="flex gap-2 items-center w-full">
+                      <Input
+                        placeholder="Rechercher un médecin..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                      {selectedDoctor && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedDoctor(null);
+                            setSearchTerm("");
+                            field.onChange(null);
+                          }}
+                        >
+                          Effacer
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
+                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
+                    <div className="border rounded-md p-2 space-y-1 bg-card mt-2">
+                      {filteredDoctors.map(doctor => (
+                        <Button
+                          key={doctor.id}
+                          variant="ghost"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            field.onChange(doctor.id);
+                            setSelectedDoctor(doctor.id);
+                            setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: doctor.color }}
+                            />
+                            {doctor.lastName} {doctor.firstName}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
