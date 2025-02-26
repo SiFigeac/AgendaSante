@@ -59,10 +59,10 @@ export function DoctorsSchedule() {
     const doctor = doctors?.find(d => d.id === availability.doctorId);
     return {
       id: availability.id.toString(),
-      resourceId: availability.id.toString(), // Added resourceId
+      resourceId: availability.id.toString(), 
       title: doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : "Disponible",
-      start: new Date(availability.startTime).toISOString(), // Changed to ISOString
-      end: new Date(availability.endTime).toISOString(),     // Changed to ISOString
+      start: new Date(availability.startTime).toISOString(), 
+      end: new Date(availability.endTime).toISOString(),    
       backgroundColor: doctor?.color || '#cbd5e1',
       borderColor: doctor?.color || '#cbd5e1',
       textColor: '#000000',
@@ -143,24 +143,28 @@ export function DoctorsSchedule() {
           .fc-timegrid-slot-lane {
             height: 6em !important;
           }
-          .fc-v-event {
-            display: block !important;
-            border: none !important;
-            background-color: var(--background) !important;
-          }
           .fc-timegrid-event-harness {
-            margin: 1px !important;
-            left: 0 !important;
-            right: 0 !important;
+            margin: 2px 0 !important;
           }
           .fc-timegrid-event {
-            border-radius: 4px !important;
             margin: 0 4px !important;
+            border-radius: 4px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            background-color: var(--event-color, inherit) !important;
           }
           .fc-event-time, .fc-event-title {
             padding: 2px 4px !important;
             font-size: 0.875rem !important;
+          }
+          .fc-v-event {
+            background-color: var(--event-color, inherit) !important;
+            border: none !important;
+          }
+          .fc-event-main {
+            padding: 2px !important;
+          }
+          .fc-event-main-frame {
+            height: 100% !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
@@ -194,6 +198,11 @@ export function DoctorsSchedule() {
           forceEventDuration={true}
           displayEventEnd={true}
           slotDuration="01:00:00"
+          eventDidMount={(info) => {
+            if (info.event.backgroundColor) {
+              info.el.style.setProperty('--event-color', info.event.backgroundColor);
+            }
+          }}
           eventContent={(info) => (
             <div className="fc-event-main-frame">
               <div className="fc-event-title-container">
@@ -206,13 +215,6 @@ export function DoctorsSchedule() {
               </div>
             </div>
           )}
-          eventClick={(info) => setSelectedEvent({
-            id: parseInt(info.event.id),
-            title: info.event.title,
-            start: info.event.start,
-            end: info.event.end,
-            isBooked: info.event.extendedProps.isBooked,
-          })}
         />
       </div>
 

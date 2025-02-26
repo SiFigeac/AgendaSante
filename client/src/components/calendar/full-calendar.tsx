@@ -40,24 +40,33 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
             .fc-timegrid-slot-lane {
               height: 6em !important;
             }
-            .fc-v-event {
-              display: block !important;
-              border: none !important;
-              background-color: var(--background) !important;
-            }
             .fc-timegrid-event-harness {
-              margin: 1px !important;
-              left: 0 !important;
-              right: 0 !important;
+              margin: 2px 0 !important;
             }
             .fc-timegrid-event {
-              border-radius: 4px !important;
               margin: 0 4px !important;
+              border-radius: 4px !important;
               box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+              background-color: var(--event-color, inherit) !important;
             }
             .fc-event-time, .fc-event-title {
               padding: 2px 4px !important;
               font-size: 0.875rem !important;
+            }
+            .fc-v-event {
+              background-color: var(--event-color, inherit) !important;
+              border: none !important;
+            }
+            .fc-event-main {
+              padding: 2px !important;
+            }
+            .fc-event-main-frame {
+              height: 100% !important;
+            }
+            .fc-daygrid-event {
+              margin: 2px 4px !important;
+              padding: 2px 4px !important;
+              border-radius: 4px !important;
             }
             .fc-timegrid-col-events {
               margin: 0 !important;
@@ -103,6 +112,11 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
             }
           }}
           dateClick={handleDateClick}
+          eventDidMount={(info) => {
+            if (info.event.backgroundColor) {
+              info.el.style.setProperty('--event-color', info.event.backgroundColor);
+            }
+          }}
           eventContent={(info) => (
             <div className="fc-event-main-frame">
               <div className="fc-event-title-container">
