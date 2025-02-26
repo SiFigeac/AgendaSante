@@ -10,7 +10,7 @@ interface DayPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   date: Date;
-  appointments: Appointment[];
+  appointments: any[];
   patients: Patient[];
 }
 
@@ -25,15 +25,15 @@ export function DayPreviewDialog({
 
   // Filtrer les rendez-vous pour la date sélectionnée
   const dayAppointments = appointments.filter(apt => {
-    const aptDate = new Date(apt.startTime);
+    const aptDate = new Date(apt.start);
     return format(aptDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
   });
 
-  // Trouver le nom du patient
-  const getPatientName = (patientId: number) => {
-    const patient = patients.find(p => p.id === patientId);
-    return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
-  };
+  // Trouver le nom du patient - This function is no longer needed because apt.title provides the patient name.
+  // const getPatientName = (patientId: number) => {
+  //   const patient = patients.find(p => p.id === patientId);
+  //   return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
+  // };
 
   return (
     <>
@@ -55,25 +55,25 @@ export function DayPreviewDialog({
                 <div
                   key={apt.id}
                   className="p-4 rounded-lg border flex items-center justify-between hover:bg-accent cursor-pointer"
-                  onClick={() => setSelectedAppointment(apt)}
+                  onClick={() => setSelectedAppointment(apt.extendedProps.appointment)}
                 >
                   <div>
-                    <div className="font-medium">{getPatientName(apt.patientId)}</div>
+                    <div className="font-medium">{apt.title}</div>
                     <div className="text-sm text-muted-foreground">
-                      {format(new Date(apt.startTime), 'HH:mm')} - {format(new Date(apt.endTime), 'HH:mm')}
+                      {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
                     </div>
                     <div className="text-sm text-muted-foreground capitalize">
-                      Type : {apt.type === 'consultation' ? 'Consultation' :
-                             apt.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                      Type : {apt.extendedProps.type === 'consultation' ? 'Consultation' :
+                             apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                     </div>
                   </div>
                   <Badge
-                    variant={apt.status === 'confirmed' ? 'default' : 
-                            apt.status === 'cancelled' ? 'destructive' : 'secondary'}
+                    variant={apt.extendedProps.status === 'confirmed' ? 'default' :
+                            apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
                     className="capitalize"
                   >
-                    {apt.status === 'confirmed' ? 'Confirmé' :
-                     apt.status === 'cancelled' ? 'Annulé' : 'Planifié'}
+                    {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
+                     apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
                   </Badge>
                 </div>
               ))

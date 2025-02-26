@@ -11,7 +11,7 @@ import { AppointmentDetailDialog } from '@/components/appointments/appointment-d
 import { useQuery } from '@tanstack/react-query';
 
 interface FullCalendarProps {
-  appointments: Appointment[];
+  appointments: any[];
   patients: Patient[];
   onDateSelect: (date: Date) => void;
 }
@@ -20,6 +20,11 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
   const [showDayPreview, setShowDayPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
+  const handleDateClick = (info: { date: Date }) => {
+    setSelectedDate(info.date);
+    setShowDayPreview(true);
+  };
 
   // Récupérer la liste des médecins pour leurs couleurs
   const { data: doctors } = useQuery({
@@ -44,19 +49,10 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
       extendedProps: {
         appointment: apt,
         patientName,
-        doctorName: doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin non assigné'
+        doctor: doctor //Added doctor to extendedProps for easier access in eventContent
       }
     };
   }) || [];
-
-  const handleDateClick = (info: { date: Date }) => {
-    setSelectedDate(info.date);
-    setShowDayPreview(true);
-  };
-
-  const handleEventClick = (info: { event: any }) => {
-    setSelectedAppointment(info.event.extendedProps.appointment);
-  };
 
   return (
     <>
@@ -67,37 +63,38 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
               height: 100%;
               min-height: 700px;
             }
-            .appointment-event {
-              border-radius: 4px !important;
-              margin: 1px !important;
-              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-              transition: all 0.2s ease !important;
+            .fc-timegrid-slot {
+              height: 6em !important;
             }
-            .appointment-event:hover {
-              transform: scale(1.02);
-              z-index: 5 !important;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
-            }
-            .fc-timegrid-event .fc-event-main {
-              padding: 4px !important;
+            .fc-timegrid-slot-lane {
+              height: 6em !important;
             }
             .fc-timegrid-event-harness {
               margin: 0 !important;
             }
-            @media (max-width: 640px) {
-              .fc .fc-toolbar {
-                flex-direction: column;
-                gap: 1rem;
-              }
-              .fc .fc-toolbar-title {
-                font-size: 1.2rem;
-              }
-              .fc-header-toolbar {
-                margin-bottom: 1.5em !important;
-              }
-              .fc-timegrid-event .fc-event-main {
-                font-size: 0.75rem !important;
-              }
+            .fc-timegrid-event {
+              margin: 0 4px !important;
+              border-radius: 4px !important;
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            }
+            .fc-event-time {
+              font-size: 0.875rem !important;
+              padding: 2px 4px !important;
+            }
+            .fc-event-title {
+              padding: 2px 4px !important;
+              font-size: 0.875rem !important;
+            }
+            .fc-daygrid-event {
+              margin: 2px 4px !important;
+              padding: 2px 4px !important;
+              border-radius: 4px !important;
+            }
+            .fc-v-event {
+              border: none !important;
+            }
+            .fc-timegrid-col-events {
+              margin: 0 !important;
             }
           `}
         </style>
@@ -134,27 +131,26 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
           dayMaxEvents={true}
           weekends={true}
           select={(info) => onDateSelect(info.start)}
-          eventClick={handleEventClick}
+          eventClick={(info) => {
+            if (info.event.extendedProps.appointment) {
+              setSelectedAppointment(info.event.extendedProps.appointment);
+            }
+          }}
           dateClick={handleDateClick}
-          eventContent={(info) => {
-            return (
-              <>
-                <div className="fc-event-main-frame">
-                  <div className="fc-event-title-container">
-                    <div className="fc-event-title fc-sticky">
-                      {info.event.title}
-                    </div>
-                    <div className="text-xs opacity-75">
-                      {info.event.extendedProps.doctorName}
-                    </div>
-                  </div>
+          eventContent={(info) => (
+            <div className="fc-event-main-frame">
+              <div className="fc-event-title-container">
+                <div className="fc-event-title fc-sticky">
+                  {info.event.title}
                 </div>
-              </>
-            );
-          }}
-          eventDidMount={(info) => {
-            info.el.title = `${info.event.title}\nMédecin: ${info.event.extendedProps.doctorName}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-          }}
+                {info.event.extendedProps.doctor && (
+                  <div className="text-xs opacity-75">
+                    Dr. {info.event.extendedProps.doctor.lastName} {info.event.extendedProps.doctor.firstName}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         />
       </div>
 
