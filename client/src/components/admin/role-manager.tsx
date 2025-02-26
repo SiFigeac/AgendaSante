@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { useState } from "react";
 import { 
   Card,
@@ -40,7 +40,18 @@ const PREDEFINED_ROLES = [
 ];
 
 export function RoleManager() {
-  const [showAddRole, setShowAddRole] = useState(false);
+  const [showRoleForm, setShowRoleForm] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
+
+  const handleEditRole = (role: typeof PREDEFINED_ROLES[0]) => {
+    setSelectedRole(role);
+    setShowRoleForm(true);
+  };
+
+  const handleAddRole = () => {
+    setSelectedRole(null);
+    setShowRoleForm(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -51,7 +62,7 @@ export function RoleManager() {
             Créez et gérez les rôles pour les utilisateurs
           </p>
         </div>
-        <Button onClick={() => setShowAddRole(true)}>
+        <Button onClick={handleAddRole}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau rôle
         </Button>
@@ -85,6 +96,14 @@ export function RoleManager() {
                       {role.description}
                     </p>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditRole(role)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Modifier le rôle</span>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -93,8 +112,9 @@ export function RoleManager() {
       </div>
 
       <RoleForm 
-        open={showAddRole}
-        onOpenChange={setShowAddRole}
+        open={showRoleForm}
+        onOpenChange={setShowRoleForm}
+        role={selectedRole}
       />
     </div>
   );

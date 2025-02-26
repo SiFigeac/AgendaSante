@@ -26,16 +26,21 @@ type RoleFormData = z.infer<typeof roleSchema>;
 interface RoleFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  role?: {
+    name: string;
+    displayName: string;
+    description: string;
+  } | null;
 }
 
-export function RoleForm({ open, onOpenChange }: RoleFormProps) {
+export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RoleFormData>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
-      name: "",
-      description: "",
+      name: role?.name || "",
+      description: role?.description || "",
       permissions: {
         canManageUsers: false,
         canManageRoles: false,
@@ -48,12 +53,12 @@ export function RoleForm({ open, onOpenChange }: RoleFormProps) {
   const onSubmit = async (data: RoleFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement role creation API
+      // TODO: Implement role creation/update API
       console.log("Role data:", data);
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error("Error creating role:", error);
+      console.error("Error saving role:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +68,9 @@ export function RoleForm({ open, onOpenChange }: RoleFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Nouveau rôle</DialogTitle>
+          <DialogTitle>
+            {role ? `Modifier le rôle : ${role.displayName}` : 'Nouveau rôle'}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -75,7 +82,7 @@ export function RoleForm({ open, onOpenChange }: RoleFormProps) {
                 <FormItem>
                   <FormLabel>Nom du rôle</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: Administrateur" />
+                    <Input {...field} placeholder="Ex: Administrateur" disabled={!!role} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,7 +108,7 @@ export function RoleForm({ open, onOpenChange }: RoleFormProps) {
 
             <div className="space-y-4">
               <h4 className="font-medium">Permissions</h4>
-              
+
               <FormField
                 control={form.control}
                 name="permissions.canManageUsers"
@@ -175,7 +182,7 @@ export function RoleForm({ open, onOpenChange }: RoleFormProps) {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Créer le rôle
+              {role ? 'Mettre à jour le rôle' : 'Créer le rôle'}
             </Button>
           </form>
         </Form>
