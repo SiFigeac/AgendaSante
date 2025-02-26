@@ -72,7 +72,19 @@ export function DayPreviewDialog({
                   </div>
 
                   <div className="p-3 space-y-3">
-                    {/* Horaire, type et motif */}
+                    {/* Motif de la consultation */}
+                    {apt.extendedProps.appointment.motif && (
+                      <div className="bg-primary/[0.08] rounded-md p-2.5">
+                        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                          Motif
+                        </div>
+                        <div className="text-sm leading-relaxed">
+                          {apt.extendedProps.appointment.motif}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Horaire et type */}
                     <div className="text-sm flex items-center gap-2.5 flex-wrap">
                       <span className="font-medium whitespace-nowrap">
                         {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
@@ -82,14 +94,6 @@ export function DayPreviewDialog({
                         {apt.extendedProps.type === 'consultation' ? 'Consultation' :
                          apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                       </span>
-                      {apt.extendedProps.appointment.motif && (
-                        <>
-                          <span className="text-muted-foreground/70">•</span>
-                          <span className="text-foreground font-medium">
-                            {apt.extendedProps.appointment.motif}
-                          </span>
-                        </>
-                      )}
                     </div>
 
                     {/* Médecin */}
