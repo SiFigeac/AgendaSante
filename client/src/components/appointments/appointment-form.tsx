@@ -48,10 +48,15 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
-    if (!doctorSearch) return true; //Show all doctors if search is empty.
-    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
-    return fullName.includes(doctorSearch.toLowerCase());
+    const searchTerm = doctorSearch.toLowerCase();
+    if (!searchTerm) return true;
+    const lastName = doctor.lastName?.toLowerCase() || '';
+    const firstName = doctor.firstName?.toLowerCase() || '';
+    return lastName.includes(searchTerm) || firstName.includes(searchTerm);
   });
+
+  // État pour garder le médecin sélectionné
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
 
   const createAppointment = useMutation({
     mutationFn: async (data) => {
@@ -132,33 +137,26 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                           placeholder="Rechercher un médecin..."
                           value={doctorSearch}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            setDoctorSearch(value);
-                            if (value) {
-                              setShowDoctorResults(true);
-                            }
+                            setDoctorSearch(e.target.value);
+                            setShowDoctorResults(true);
                           }}
                           onFocus={() => setShowDoctorResults(true)}
-                          onBlur={() => {
-                            // Délai pour permettre le clic sur les résultats
-                            setTimeout(() => setShowDoctorResults(false), 200);
-                          }}
                         />
                       </FormControl>
                       <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     </div>
                     {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
                         {filteredDoctors.map((doctor: any) => (
                           <div
                             key={doctor.id}
                             className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
                             onClick={() => {
                               field.onChange(doctor.id);
+                              setSelectedDoctor(doctor);
                               setDoctorSearch(`${doctor.lastName} ${doctor.firstName}`);
                               setShowDoctorResults(false);
                             }}
-                            onMouseDown={(e) => e.preventDefault()} // Empêche le onBlur de se déclencher trop tôt
                           >
                             <div
                               className="w-3 h-3 rounded-full"
