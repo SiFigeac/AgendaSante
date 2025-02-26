@@ -86,9 +86,7 @@ export function DoctorsSchedule() {
       return;
     }
 
-    updateAvailability.mutate(
-      { id: eventId, startTime, endTime }
-    );
+    updateAvailability.mutate({ id: eventId, startTime, endTime });
   };
 
   const events = availabilities?.map(availability => {
@@ -195,8 +193,7 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            position: absolute !important;
-            margin: 0 1px !important;
+            margin: 0 2px !important;
           }
           .fc-timegrid-event {
             border: none !important;
@@ -209,6 +206,12 @@ export function DoctorsSchedule() {
           }
           .fc-timegrid-slot {
             height: 3em !important;
+          }
+          .fc-time-grid .fc-slats td {
+            height: 3em !important;
+          }
+          .fc-time-grid-event {
+            margin: 0 2px !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -250,9 +253,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={true}
+          eventOverlap={false}
           nowIndicator={true}
-          slotEventOverlap={true}
+          slotEventOverlap={false}
           forceEventDuration={true}
           displayEventEnd={true}
           slotLabelFormat={{
