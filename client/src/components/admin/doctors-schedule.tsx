@@ -87,15 +87,7 @@ export function DoctorsSchedule() {
     }
 
     updateAvailability.mutate(
-      { id: eventId, startTime, endTime },
-      {
-        onSettled: () => {
-          info.el.style.opacity = "";
-        },
-        onError: () => {
-          info.revert();
-        }
-      }
+      { id: eventId, startTime, endTime }
     );
   };
 
@@ -146,19 +138,18 @@ export function DoctorsSchedule() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 justify-end">
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center w-[250px]">
           <Input
             placeholder="Rechercher un médecin..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-[250px]"
           />
           {selectedDoctor && (
             <Button
               variant="ghost"
               onClick={() => setSelectedDoctor(null)}
             >
-              Tous les médecins
+              Tous
             </Button>
           )}
         </div>
@@ -204,14 +195,11 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            position: relative !important;
+            position: absolute !important;
+            margin: 0 1px !important;
           }
           .fc-timegrid-event {
-            margin: 0 1px !important;
             border: none !important;
-            position: absolute !important;
-            left: 0 !important;
-            right: 0 !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
