@@ -109,7 +109,6 @@ export function DoctorsSchedule() {
     );
   };
 
-  // Formatage des événements pour le calendrier
   const events = availabilities?.map(availability => {
     const doctor = doctors?.find(d => d.id === availability.doctorId);
     return {
@@ -117,8 +116,8 @@ export function DoctorsSchedule() {
       title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: doctor?.color || 'hsl(200, 70%, 75%)',
-      borderColor: doctor?.color || 'hsl(200, 70%, 75%)',
+      backgroundColor: doctor?.color || '#cbd5e1',
+      borderColor: doctor?.color || '#cbd5e1',
       textColor: '#000000',
       classNames: ['availability-event'],
       extendedProps: {
@@ -198,15 +197,19 @@ export function DoctorsSchedule() {
 
       <style>
         {`
+          .fc {
+            height: 100%;
+            min-height: 600px;
+          }
           .fc-timegrid-event-harness {
             margin: 0 !important;
           }
           .fc-timegrid-event {
+            margin: 1px !important;
             border: none !important;
-            margin: 1px 2px !important;
           }
           .fc-timegrid-event .fc-event-main {
-            padding: 2px 4px !important;
+            padding: 4px !important;
           }
           .fc .fc-timegrid-slot {
             height: 3em !important;
@@ -218,25 +221,19 @@ export function DoctorsSchedule() {
             margin: 0 !important;
           }
           .fc-direction-ltr .fc-timegrid-col-events {
-            margin: 0 2% !important;
+            margin: 0 1% !important;
           }
           .availability-event {
             border-radius: 4px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-            transition: transform 0.2s ease !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s ease !important;
           }
           .availability-event:hover {
-            transform: scale(1.02);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+            transform: scale(1.01);
+            z-index: 5 !important;
           }
           .fc-event-selected {
             box-shadow: 0 0 0 2px #000 !important;
-          }
-          .fc-event-dragging {
-            opacity: 0.7;
-          }
-          .fc-timegrid-event.fc-event-mirror {
-            opacity: 0.7;
           }
           .fc-timegrid-more-link {
             background: none;
@@ -251,10 +248,22 @@ export function DoctorsSchedule() {
           .fc-timegrid-now-indicator-arrow {
             border-color: #ef4444;
           }
+          @media (max-width: 640px) {
+            .fc .fc-toolbar {
+              flex-direction: column;
+              gap: 1rem;
+            }
+            .fc .fc-toolbar-title {
+              font-size: 1.2rem;
+            }
+            .fc-header-toolbar {
+              margin-bottom: 1.5em !important;
+            }
+          }
         `}
       </style>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-hidden">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"

@@ -206,17 +206,6 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                         <FormControl>
                           <Input {...field} type="color" className="w-20 h-10" />
                         </FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            const newColor = generatePastelColor();
-                            field.onChange(newColor);
-                            form.setValue("color", newColor);
-                          }}
-                        >
-                          Générer
-                        </Button>
                         <div 
                           className="w-8 h-8 rounded-full border"
                           style={{ backgroundColor: field.value }}
