@@ -197,20 +197,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
-    // Assurez-vous que les dates sont au bon format
-    const formattedUpdate = {
-      ...update,
-      startTime: update.startTime ? new Date(update.startTime) : undefined,
-      endTime: update.endTime ? new Date(update.endTime) : undefined,
-    };
+    try {
+      // Ensure dates are properly formatted as Date objects
+      const formattedUpdate = {
+        ...update,
+        startTime: update.startTime ? new Date(update.startTime) : undefined,
+        endTime: update.endTime ? new Date(update.endTime) : undefined,
+      };
 
-    const [avail] = await db
-      .update(availabilityTable)
-      .set(formattedUpdate)
-      .where(eq(availabilityTable.id, id))
-      .returning();
-    if (!avail) throw new Error("Availability not found");
-    return avail;
+      // Validate dates
+      if (formattedUpdate.startTime && formattedUpdate.endTime &&
+          formattedUpdate.startTime >= formattedUpdate.endTime) {
+        throw new Error("La date de début doit être antérieure à la date de fin");
+      }
+
+      const [avail] = await db
+        .update(availabilityTable)
+        .set(formattedUpdate)
+        .where(eq(availabilityTable.id, id))
+        .returning();
+
+      if (!avail) throw new Error("Cette plage horaire n'existe pas");
+      return avail;
+    } catch (error) {
+      console.error('Error in updateAvailability:', error);
+      throw error instanceof Error ? error : new Error("Erreur inconnue lors de la mise à jour");
+    }
   }
 
   async deleteAvailability(id: number): Promise<void> {

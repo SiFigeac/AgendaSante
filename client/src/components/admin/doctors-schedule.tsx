@@ -4,7 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventDropArg as FullCalendarEventDropArg } from "@fullcalendar/core";
+import type { EventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -38,26 +38,28 @@ export function DoctorsSchedule() {
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
       try {
-        // Validation des dates
         const startTime = new Date(data.startTime);
         const endTime = new Date(data.endTime);
 
+        // Validation des dates
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-          throw new Error("Les dates sélectionnées ne sont pas valides");
+          throw new Error("Les dates sélectionnées sont invalides");
         }
 
         if (startTime >= endTime) {
           throw new Error("La date de début doit être antérieure à la date de fin");
         }
 
-        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
+        const formattedData = {
           startTime: startTime.toISOString(),
           endTime: endTime.toISOString(),
-        });
+        };
+
+        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, formattedData);
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData?.error || "Erreur lors de la mise à jour");
+          const errorData = await res.json().catch(() => ({ error: "Erreur inconnue" }));
+          throw new Error(errorData.error || "Erreur lors de la mise à jour");
         }
 
         return res.json();
@@ -82,33 +84,19 @@ export function DoctorsSchedule() {
     },
   });
 
-  // Formatage des événements pour le calendrier
-  const events = availabilities?.map(availability => {
-    const doctor = doctors?.find(d => d.id === availability.doctorId);
-    return {
-      id: availability.id.toString(),
-      title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
-      start: availability.startTime,
-      end: availability.endTime,
-      backgroundColor: doctor?.color || '#22c55e',
-      extendedProps: {
-        isBooked: availability.isBooked,
-        doctorId: availability.doctorId,
-      }
-    };
-  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
-
-  const handleEventDrop = (info: FullCalendarEventDropArg) => {
+  const handleEventDrop = async (info: EventDropArg) => {
+    const eventEl = info.el;
     try {
       const eventId = parseInt(info.event.id);
       const startTime = info.event.start;
       const endTime = info.event.end;
 
+      // Validation initiale
       if (!startTime || !endTime) {
         info.revert();
         toast({
           title: "Erreur",
-          description: "Impossible de déplacer la plage horaire : dates invalides",
+          description: "Dates invalides pour la plage horaire",
           variant: "destructive",
         });
         return;
@@ -124,36 +112,28 @@ export function DoctorsSchedule() {
         return;
       }
 
-      // Ajouter une classe visuelle pendant la mise à jour
-      const eventEl = info.el;
+      // Ajouter un retour visuel pendant la mise à jour
       eventEl.style.opacity = "0.5";
       eventEl.style.cursor = "wait";
 
-      updateAvailability.mutate(
-        {
-          id: eventId,
-          startTime,
-          endTime,
-        },
-        {
-          onSettled: () => {
-            // Restaurer l'apparence normale
-            eventEl.style.opacity = "";
-            eventEl.style.cursor = "";
-          },
-          onError: () => {
-            info.revert();
-          }
-        }
-      );
+      await updateAvailability.mutateAsync({
+        id: eventId,
+        startTime,
+        endTime,
+      });
+
     } catch (error) {
       console.error("Error in handleEventDrop:", error);
       info.revert();
       toast({
         title: "Erreur",
-        description: "Impossible de déplacer la plage horaire",
+        description: error instanceof Error ? error.message : "Erreur lors du déplacement",
         variant: "destructive",
       });
+    } finally {
+      // Restaurer l'apparence normale
+      eventEl.style.opacity = "";
+      eventEl.style.cursor = "";
     }
   };
 
@@ -181,17 +161,27 @@ export function DoctorsSchedule() {
     },
   });
 
+  // Formatage des événements pour le calendrier
+  const events = availabilities?.map(availability => {
+    const doctor = doctors?.find(d => d.id === availability.doctorId);
+    return {
+      id: availability.id.toString(),
+      title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
+      start: availability.startTime,
+      end: availability.endTime,
+      backgroundColor: doctor?.color || '#22c55e',
+      extendedProps: {
+        isBooked: availability.isBooked,
+        doctorId: availability.doctorId,
+      }
+    };
+  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
+
   // Filtrer les médecins en fonction du terme de recherche
   const filteredDoctors = doctors?.filter(doctor => {
     const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase());
   });
-
-  // Formatage du nom du médecin
-  const formatDoctorName = (doctor: User) => {
-    return `${doctor.lastName} ${doctor.firstName}`;
-  };
-
 
   const handleEventClick = (info: any) => {
     const event = {
@@ -337,6 +327,7 @@ export function DoctorsSchedule() {
           eventDragStop={(info) => {
             info.el.style.cursor = 'grab';
           }}
+          eventClick={handleEventClick}
         />
       </div>
 
