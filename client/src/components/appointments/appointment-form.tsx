@@ -12,6 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 interface AppointmentFormProps {
   open: boolean;
@@ -21,8 +25,8 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
+  const [openCombobox, setOpenCombobox] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
@@ -46,13 +50,10 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   const selectedPatientId = form.watch("patientId");
   const currentPatient = patients?.find((p: any) => p.id === selectedPatientId);
 
-  // Obtenir le médecin sélectionné
-  const currentDoctor = doctors?.find((d: any) => d.id === selectedDoctor);
-
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
-    const search = searchTerm.toLowerCase();
-    if (!search) return true;
+    if (!searchValue) return true;
+    const search = searchValue.toLowerCase();
     const lastName = (doctor.lastName || '').toLowerCase();
     const firstName = (doctor.firstName || '').toLowerCase();
     return lastName.includes(search) || firstName.includes(search);
@@ -130,55 +131,61 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        placeholder="Rechercher un médecin..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full"
-                      />
-                      {selectedDoctor && (
+                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
                         <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedDoctor(null);
-                            setSearchTerm("");
-                            field.onChange(null);
-                          }}
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCombobox}
+                          className="w-full justify-between"
                         >
-                          ×
+                          {field.value
+                            ? doctors?.find((doctor) => doctor.id === field.value)?.lastName + " " +
+                              doctors?.find((doctor) => doctor.id === field.value)?.firstName
+                            : "Sélectionnez un médecin"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
-                      )}
-                    </div>
-
-                    {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
-                        {filteredDoctors.map((doctor: any) => (
-                          <Button
-                            key={doctor.id}
-                            type="button"
-                            variant="ghost"
-                            className="w-full justify-start px-3 py-2 h-auto"
-                            onClick={() => {
-                              field.onChange(doctor.id);
-                              setSelectedDoctor(doctor.id);
-                              setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: doctor.color }}
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Rechercher un médecin..."
+                          value={searchValue}
+                          onValueChange={setSearchValue}
+                        />
+                        <CommandEmpty>Aucun médecin trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredDoctors?.map((doctor) => (
+                            <CommandItem
+                              key={doctor.id}
+                              value={`${doctor.lastName} ${doctor.firstName}`}
+                              onSelect={() => {
+                                field.onChange(doctor.id);
+                                setOpenCombobox(false);
+                                setSearchValue("");
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: doctor.color }}
+                                />
+                                <span>Dr. {doctor.lastName} {doctor.firstName}</span>
+                              </div>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  field.value === doctor.id ? "opacity-100" : "opacity-0"
+                                )}
                               />
-                              <span>Dr. {doctor.lastName} {doctor.firstName}</span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -277,7 +284,11 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={createAppointment.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createAppointment.isPending}
+            >
               {createAppointment.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

@@ -85,16 +85,6 @@ export function DoctorsSchedule() {
     };
   }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
 
-  const handleEventClick = (info: any) => {
-    setSelectedEvent({
-      id: parseInt(info.event.id),
-      title: info.event.title,
-      start: info.event.start,
-      end: info.event.end,
-      isBooked: info.event.extendedProps.isBooked,
-    });
-  };
-
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter(doctor => {
     const search = searchTerm.toLowerCase();
@@ -162,9 +152,16 @@ export function DoctorsSchedule() {
             height: 100%;
             min-height: 700px;
           }
+          .fc-daygrid-day {
+            min-height: 150px !important;
+          }
+          .fc-timegrid-slot {
+            height: 3em !important;
+          }
           .availability-event {
             border-radius: 4px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            margin: 1px !important;
             transition: all 0.2s ease !important;
           }
           .availability-event:hover {
@@ -172,24 +169,17 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            position: absolute !important;
-            left: 0 !important;
-            right: 0 !important;
-            margin: 0 4px !important;
+            margin: 1px !important;
           }
           .fc-timegrid-event {
             border: none !important;
-            margin: 0 !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
           }
-          .fc-event-time {
+          .fc-event-time, .fc-event-title {
+            padding: 2px 4px !important;
             font-size: 0.875rem !important;
-            padding: 2px 4px !important;
-          }
-          .fc-event-title {
-            padding: 2px 4px !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -201,10 +191,6 @@ export function DoctorsSchedule() {
             }
             .fc-header-toolbar {
               margin-bottom: 1.5em !important;
-            }
-            .fc-timegrid-event .fc-event-main {
-              font-size: 0.75rem !important;
-              padding: 2px !important;
             }
           }
         `}
@@ -231,9 +217,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={false}
+          eventOverlap={true}
           nowIndicator={true}
-          slotEventOverlap={false}
+          slotEventOverlap={true}
           forceEventDuration={true}
           displayEventEnd={true}
           slotDuration="00:15:00"
@@ -251,7 +237,13 @@ export function DoctorsSchedule() {
             const title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
             info.el.title = title;
           }}
-          eventClick={handleEventClick}
+          eventClick={(info) => setSelectedEvent({
+            id: parseInt(info.event.id),
+            title: info.event.title,
+            start: info.event.start,
+            end: info.event.end,
+            isBooked: info.event.extendedProps.isBooked,
+          })}
         />
       </div>
 
