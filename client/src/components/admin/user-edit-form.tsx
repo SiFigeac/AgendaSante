@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { User } from "@shared/schema";
+import { PREDEFINED_ROLES } from "@/lib/roles";
 
 interface UserEditFormProps {
   open: boolean;
