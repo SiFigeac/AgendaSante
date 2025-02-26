@@ -204,13 +204,15 @@ export function DoctorsSchedule() {
             margin: 2px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
+            opacity: 0.9 !important;
           }
           .availability-event:hover {
             transform: scale(1.02);
             z-index: 5 !important;
+            opacity: 1 !important;
           }
           .fc-timegrid-event-harness {
-            margin: 0 2px !important;
+            margin: 0 1% !important;
           }
           .fc-timegrid-event {
             border: none !important;
@@ -223,15 +225,16 @@ export function DoctorsSchedule() {
           }
           .fc .fc-timegrid-col-events {
             margin: 0 !important;
+            position: relative !important;
           }
           .fc-direction-ltr .fc-timegrid-col-events {
-            margin: 0 !important;
-          }
-          .fc-v-event {
-            border: none !important;
+            margin: 0 1% !important;
           }
           .fc-timegrid-event.fc-event-mirror {
             opacity: 0.7 !important;
+          }
+          .fc-v-event {
+            border: none !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
