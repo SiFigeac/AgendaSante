@@ -3,8 +3,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import type { EventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
@@ -37,11 +35,6 @@ export function DoctorsSchedule() {
 
   const { data: availabilities } = useQuery<Availability[]>({
     queryKey: ["/api/availability"],
-  });
-
-  // Récupérer les rendez-vous pour afficher les couleurs des médecins
-  const { data: appointments } = useQuery({
-    queryKey: ["/api/appointments"],
   });
 
   const updateAvailability = useMutation({
@@ -116,56 +109,33 @@ export function DoctorsSchedule() {
     );
   };
 
-  // Combiner les disponibilités et les rendez-vous pour le calendrier
-  const events = [
-    ...(availabilities?.map(availability => {
-      const doctor = doctors?.find(d => d.id === availability.doctorId);
-      return {
-        id: availability.id.toString(),
-        title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
-        start: availability.startTime,
-        end: availability.endTime,
-        backgroundColor: doctor?.color || '#cbd5e1',
-        borderColor: doctor?.color || '#cbd5e1',
-        textColor: '#000000',
-        classNames: ['availability-event'],
-        extendedProps: {
-          type: 'availability',
-          isBooked: availability.isBooked,
-          doctorId: availability.doctorId,
-        }
-      };
-    }) || []),
-    ...(appointments?.map(appointment => {
-      const doctor = doctors?.find(d => d.id === appointment.doctorId);
-      return {
-        id: `apt-${appointment.id}`,
-        title: `RDV: ${appointment.type}`,
-        start: appointment.startTime,
-        end: appointment.endTime,
-        backgroundColor: doctor?.color || '#cbd5e1',
-        borderColor: doctor?.color || '#cbd5e1',
-        textColor: '#000000',
-        classNames: ['appointment-event'],
-        extendedProps: {
-          type: 'appointment',
-          doctorId: appointment.doctorId,
-          patientName: appointment.patientName || 'Non spécifié',
-        }
-      };
-    }) || [])
-  ].filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
+  // Formater uniquement les plages horaires pour le calendrier
+  const events = availabilities?.map(availability => {
+    const doctor = doctors?.find(d => d.id === availability.doctorId);
+    return {
+      id: availability.id.toString(),
+      title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
+      start: availability.startTime,
+      end: availability.endTime,
+      backgroundColor: doctor?.color || '#cbd5e1',
+      borderColor: doctor?.color || '#cbd5e1',
+      textColor: '#000000',
+      classNames: ['availability-event'],
+      extendedProps: {
+        isBooked: availability.isBooked,
+        doctorId: availability.doctorId,
+      }
+    };
+  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
 
   const handleEventClick = (info: any) => {
-    if (info.event.extendedProps.type === 'availability') {
-      setSelectedEvent({
-        id: parseInt(info.event.id),
-        title: info.event.title,
-        start: info.event.start,
-        end: info.event.end,
-        isBooked: info.event.extendedProps.isBooked,
-      });
-    }
+    setSelectedEvent({
+      id: parseInt(info.event.id),
+      title: info.event.title,
+      start: info.event.start,
+      end: info.event.end,
+      isBooked: info.event.extendedProps.isBooked,
+    });
   };
 
   const filteredDoctors = doctors?.filter(doctor => {
@@ -252,28 +222,10 @@ export function DoctorsSchedule() {
           .fc .fc-toolbar-title {
             @apply text-xl font-semibold;
           }
-          .fc-theme-standard .fc-list {
-            @apply border rounded-md;
-          }
-          .fc .fc-list-empty {
-            @apply bg-muted/50;
-          }
-          .fc .fc-list-event:hover td {
-            @apply bg-muted/50;
-          }
-          .fc-direction-ltr .fc-list-day-side-text {
-            @apply float-none;
-          }
-          .fc .fc-list-event-dot {
-            @apply border-4;
-          }
-          .fc-theme-standard .fc-list-day-cushion {
-            @apply bg-muted/30;
-          }
-          .availability-event, .appointment-event {
+          .availability-event {
             @apply rounded-md shadow-sm transition-transform duration-200;
           }
-          .availability-event:hover, .appointment-event:hover {
+          .availability-event:hover {
             @apply transform scale-[1.02] shadow-md z-10;
           }
           .fc-timegrid-event-harness {
@@ -371,10 +323,7 @@ export function DoctorsSchedule() {
             hour12: false
           }}
           eventDidMount={(info) => {
-            const type = info.event.extendedProps.type;
-            const title = type === 'availability'
-              ? `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`
-              : `${info.event.title}\nPatient: ${info.event.extendedProps.patientName}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+            const title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
             info.el.title = title;
           }}
           eventClick={handleEventClick}
