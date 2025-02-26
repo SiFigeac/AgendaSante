@@ -65,6 +65,7 @@ export function AppointmentDetailDialog({
       endTime: format(new Date(appointment.endTime), "yyyy-MM-dd'T'HH:mm"),
       type: appointment.type,
       status: appointment.status,
+      motif: appointment.motif || "",
       notes: appointment.notes || "",
     },
   });
@@ -253,6 +254,20 @@ export function AppointmentDetailDialog({
 
             <FormField
               control={form.control}
+              name="motif"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Motif de la consultation</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Décrivez le motif de la consultation" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="startTime"
               render={({ field }) => (
                 <FormItem>
@@ -294,7 +309,7 @@ export function AppointmentDetailDialog({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Notes additionnelles" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

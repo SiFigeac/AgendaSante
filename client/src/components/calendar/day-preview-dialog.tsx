@@ -82,7 +82,7 @@ export function DayPreviewDialog({
                              apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                     </div>
                     {apt.extendedProps.appointment.motif && (
-                      <div className="mt-1">
+                      <div className="mt-1 font-medium">
                         Motif : {apt.extendedProps.appointment.motif}
                       </div>
                     )}
