@@ -117,10 +117,10 @@ export function DoctorsSchedule() {
       title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: doctor?.color || '#22c55e',
-      borderColor: doctor?.color || '#22c55e',
+      backgroundColor: doctor?.color || 'hsl(200, 70%, 75%)',
+      borderColor: doctor?.color || 'hsl(200, 70%, 75%)',
       textColor: '#000000',
-      resourceId: doctor?.id.toString(),
+      classNames: ['availability-event'],
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
@@ -199,35 +199,45 @@ export function DoctorsSchedule() {
 
       <style>
         {`
-          .fc {
-            height: 100%;
+          .fc-timegrid-event-harness {
+            margin: 0 2px !important;
           }
           .fc-timegrid-event {
-            background: none !important;
             border: none !important;
             padding: 0 !important;
           }
-          .fc-timegrid-event-harness {
-            border-radius: 4px !important;
-            margin: 0 2px !important;
-          }
           .fc-timegrid-event .fc-event-main {
-            border-radius: 4px !important;
-            margin: 1px !important;
             padding: 4px !important;
           }
+          .fc .fc-timegrid-slot {
+            height: 2.5em !important;
+          }
           .fc .fc-timegrid-col-events {
-            margin: 0 8px !important;
+            margin: 0 4px !important;
           }
-          .fc .fc-timegrid-now-indicator-line {
-            border-color: #ef4444 !important;
+          .availability-event {
+            border-radius: 4px !important;
+            margin: 1px 0 !important;
+            cursor: grab !important;
           }
-          .fc .fc-timegrid-now-indicator-arrow {
-            border-color: #ef4444 !important;
-            color: #ef4444 !important;
+          .availability-event:hover {
+            filter: brightness(0.95);
           }
-          .fc-event:hover {
-            z-index: 1000 !important;
+          .availability-event.fc-event-dragging {
+            opacity: 0.8;
+            cursor: grabbing !important;
+          }
+          .fc-event-selected {
+            z-index: 9999 !important;
+          }
+          .fc-timegrid-event.fc-event-mirror {
+            opacity: 0.7 !important;
+          }
+          .fc-timegrid-more-link {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 0.9em;
           }
         `}
       </style>
@@ -258,6 +268,12 @@ export function DoctorsSchedule() {
           eventOverlap={true}
           nowIndicator={true}
           slotEventOverlap={true}
+          forceEventDuration={true}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
           eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
           }}
