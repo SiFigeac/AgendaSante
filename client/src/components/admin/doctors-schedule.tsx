@@ -120,6 +120,7 @@ export function DoctorsSchedule() {
       backgroundColor: doctor?.color || '#22c55e',
       borderColor: doctor?.color || '#22c55e',
       textColor: '#000000',
+      resourceId: doctor?.id.toString(),
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
@@ -198,37 +199,35 @@ export function DoctorsSchedule() {
 
       <style>
         {`
-          .fc-event {
-            cursor: grab !important;
-            border-radius: 4px !important;
-            transition: all 0.2s ease !important;
-          }
-          .fc-time-grid-event {
-            margin: 0 !important;
-            border-radius: 4px !important;
-          }
-          .fc .fc-timegrid-col-events {
-            margin: 0 5px !important;
-            gap: 2px !important;
+          .fc {
+            height: 100%;
           }
           .fc-timegrid-event {
-            margin: 0 !important;
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          .fc-timegrid-event-harness {
             border-radius: 4px !important;
-            padding: 2px !important;
-          }
-          .fc-timegrid-event:hover {
-            transform: scale(1.02);
-            z-index: 10 !important;
-          }
-          .fc-timegrid-slots td {
-            height: 3em !important;
+            margin: 0 2px !important;
           }
           .fc-timegrid-event .fc-event-main {
-            padding: 2px 4px !important;
+            border-radius: 4px !important;
+            margin: 1px !important;
+            padding: 4px !important;
           }
-          .fc-highlight {
-            background: rgba(0, 120, 255, 0.1) !important;
-            border: 2px dashed rgba(0, 120, 255, 0.4) !important;
+          .fc .fc-timegrid-col-events {
+            margin: 0 8px !important;
+          }
+          .fc .fc-timegrid-now-indicator-line {
+            border-color: #ef4444 !important;
+          }
+          .fc .fc-timegrid-now-indicator-arrow {
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+          }
+          .fc-event:hover {
+            z-index: 1000 !important;
           }
         `}
       </style>
