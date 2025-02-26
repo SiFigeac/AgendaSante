@@ -53,24 +53,17 @@ export function DayPreviewDialog({
                   {/* En-tête avec patient et statut */}
                   <div className="border-b p-3">
                     <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: apt.backgroundColor }}
-                          />
-                          <span className="font-medium">{apt.title}</span>
-                        </div>
-                        {apt.extendedProps.appointment.motif && (
-                          <div className="text-sm pl-4">
-                            {apt.extendedProps.appointment.motif}
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: apt.backgroundColor }}
+                        />
+                        <span className="font-medium">{apt.title}</span>
                       </div>
                       <Badge
                         variant={apt.extendedProps.status === 'confirmed' ? 'default' :
                                 apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
-                        className="capitalize flex-shrink-0"
+                        className="capitalize"
                       >
                         {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
                          apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
@@ -78,22 +71,36 @@ export function DayPreviewDialog({
                     </div>
                   </div>
 
-                  {/* Détails du rendez-vous */}
-                  <div className="p-3 space-y-2">
-                    <div className="text-sm text-muted-foreground">
-                      {apt.extendedProps.doctor ? 
-                        `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
-                        'Médecin non assigné'}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium">
-                        {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
-                      </span>
-                      •
-                      <span className="capitalize">
-                        {apt.extendedProps.type === 'consultation' ? 'Consultation' :
-                         apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
-                      </span>
+                  <div className="p-3 space-y-3">
+                    {/* Motif de la consultation */}
+                    {apt.extendedProps.appointment.motif && (
+                      <div className="bg-primary/5 border rounded-md p-3">
+                        <div className="text-[13px]">
+                          <span className="font-medium">Motif : </span>
+                          {apt.extendedProps.appointment.motif}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      {/* Médecin */}
+                      <div>
+                        {apt.extendedProps.doctor ? 
+                          `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
+                          'Médecin non assigné'}
+                      </div>
+
+                      {/* Horaire et type */}
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
+                        </span>
+                        <span>•</span>
+                        <span className="capitalize">
+                          {apt.extendedProps.type === 'consultation' ? 'Consultation' :
+                           apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
