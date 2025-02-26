@@ -122,20 +122,17 @@ export function DoctorsSchedule() {
   // Formatage des événements pour le calendrier
   const events = availabilities?.map(availability => {
     const doctor = doctors?.find(d => d.id === availability.doctorId);
-    const color = doctor?.color;
-
     return {
       id: availability.id.toString(),
       title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: color,
-      borderColor: color,
+      backgroundColor: doctor?.color || '#22c55e',
+      borderColor: doctor?.color || '#22c55e',
       textColor: '#000000',
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
-        color: color // Stocker la couleur dans les propriétés étendues
       }
     };
   }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
@@ -147,7 +144,6 @@ export function DoctorsSchedule() {
       start: info.event.start,
       end: info.event.end,
       isBooked: info.event.extendedProps.isBooked,
-      color: info.event.extendedProps.color // Récupérer la couleur stockée
     });
   };
 
@@ -216,6 +212,10 @@ export function DoctorsSchedule() {
             cursor: grab !important;
             border-radius: 4px !important;
             margin: 1px !important;
+            z-index: 1;
+          }
+          .fc-event:hover {
+            z-index: 2 !important;
           }
           .fc-event-main {
             padding: 4px !important;
@@ -225,6 +225,19 @@ export function DoctorsSchedule() {
           }
           .fc-timegrid-slots td {
             height: 3em !important;
+          }
+          .fc-timegrid-event {
+            min-height: 2em !important;
+            border-radius: 4px !important;
+            margin: 1px 0 !important;
+          }
+          .fc-timegrid-event .fc-event-main {
+            padding: 2px 4px !important;
+          }
+          .fc-timegrid-event:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
           }
           .fc-highlight {
             background: rgba(0, 120, 255, 0.1) !important;
@@ -256,9 +269,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={true} // Permettre la superposition des événements
+          eventOverlap={true}
           nowIndicator={true}
-          slotEventOverlap={true} // Permettre la superposition dans les slots
+          slotEventOverlap={true}
           eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
           }}
@@ -266,42 +279,41 @@ export function DoctorsSchedule() {
         />
       </div>
 
-      {selectedEvent && (
-        <Dialog
-          open={!!selectedEvent}
-          onOpenChange={(open) => !open && setSelectedEvent(null)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Plage horaire</DialogTitle>
-              <DialogDescription>
-                {selectedEvent.title}
-                <br />
-                Du {new Date(selectedEvent.start).toLocaleString('fr-FR')}
-                <br />
-                Au {new Date(selectedEvent.end).toLocaleString('fr-FR')}
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Plage horaire</DialogTitle>
+            <DialogDescription>
+              {selectedEvent && (
+                <>
+                  {selectedEvent.title}
+                  <br />
+                  Du {new Date(selectedEvent.start).toLocaleString('fr-FR')}
+                  <br />
+                  Au {new Date(selectedEvent.end).toLocaleString('fr-FR')}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="flex justify-end gap-2 mt-4">
-              <Button 
-                variant="destructive" 
-                onClick={() => deleteAvailability.mutate(selectedEvent.id)}
-                disabled={deleteAvailability.isPending}
-              >
-                {deleteAvailability.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Supprimer"
-                )}
-              </Button>
-              <Button variant="outline" onClick={() => setSelectedEvent(null)}>
-                Fermer
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          <div className="flex justify-end gap-2 mt-4">
+            <Button 
+              variant="destructive" 
+              onClick={() => deleteAvailability.mutate(selectedEvent.id)}
+              disabled={deleteAvailability.isPending}
+            >
+              {deleteAvailability.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Supprimer"
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+              Fermer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
