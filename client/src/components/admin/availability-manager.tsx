@@ -326,100 +326,38 @@ export function AvailabilityManager() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Plage horaire</DialogTitle>
-            {!isEditing ? (
-              <DialogDescription>
-                {doctors?.find(d => d.id === selectedAvailability?.doctorId)
-                  ? formatDoctorName(doctors.find(d => d.id === selectedAvailability.doctorId)!)
-                  : ""}
-                <br />
-                Du {selectedAvailability && new Date(selectedAvailability.startTime).toLocaleString('fr-FR')}
-                <br />
-                Au {selectedAvailability && new Date(selectedAvailability.endTime).toLocaleString('fr-FR')}
-              </DialogDescription>
-            ) : (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((data) => updateAvailability.mutate(data))}
-                  className="space-y-4 mt-4"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="startTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date et heure de début</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="endTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date et heure de fin</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Annuler
-                    </Button>
-                    <Button type="submit" disabled={updateAvailability.isPending}>
-                      {updateAvailability.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Modifier
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </DialogHeader>
-          {!isEditing && (
-            <div className="flex justify-end gap-2 mt-4">
-              {!selectedAvailability?.isBooked && (
+            <DialogDescription>
+              {selectedAvailability && (
                 <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => deleteAvailability.mutate(selectedAvailability?.id)}
-                  >
-                    Supprimer
-                  </Button>
+                  {doctors?.find(d => d.id === selectedAvailability.doctorId)
+                    ? formatDoctorName(doctors.find(d => d.id === selectedAvailability.doctorId)!)
+                    : ""}
+                  <br />
+                  Du {new Date(selectedAvailability.startTime).toLocaleString('fr-FR')}
+                  <br />
+                  Au {new Date(selectedAvailability.endTime).toLocaleString('fr-FR')}
                 </>
               )}
-              <Button variant="outline" onClick={() => setSelectedAvailability(null)}>
-                Fermer
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-2 mt-4">
+            {!selectedAvailability?.isBooked && (
+              <Button
+                variant="destructive"
+                onClick={() => deleteAvailability.mutate(selectedAvailability?.id)}
+                disabled={deleteAvailability.isPending}
+              >
+                {deleteAvailability.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Supprimer
               </Button>
-            </div>
-          )}
+            )}
+            <Button variant="outline" onClick={() => setSelectedAvailability(null)}>
+              Fermer
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

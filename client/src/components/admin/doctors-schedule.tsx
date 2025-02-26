@@ -117,6 +117,7 @@ export function DoctorsSchedule() {
       start: availability.startTime,
       end: availability.endTime,
       backgroundColor: doctor?.color || '#22c55e',
+      borderColor: doctor?.color || '#22c55e',
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
