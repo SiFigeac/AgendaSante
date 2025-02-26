@@ -1,16 +1,13 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import frLocale from "@fullcalendar/core/locales/fr";
-import interactionPlugin from "@fullcalendar/interaction";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import type { EventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +16,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import frLocale from "@fullcalendar/core/locales/fr";
+import interactionPlugin from "@fullcalendar/interaction";
+
+
+// Fonction pour générer une couleur pastel aléatoire
+function generatePastelColor(): string {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 80%)`;
+}
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,9 +35,12 @@ export function DoctorsSchedule() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: doctors } = useQuery<User[]>({
+  const { data: doctors, isLoading: isLoadingDoctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
-    select: (users) => users?.filter(u => u.role === "doctor"),
+    select: (users) => users?.filter(u => u.role === "doctor").map(doctor => ({
+      ...doctor,
+      color: doctor.color || generatePastelColor()
+    })),
   });
 
   const { data: availabilities } = useQuery<Availability[]>({
@@ -116,8 +128,8 @@ export function DoctorsSchedule() {
       title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
       start: availability.startTime,
       end: availability.endTime,
-      backgroundColor: doctor?.color || '#22c55e',
-      borderColor: doctor?.color || '#22c55e',
+      backgroundColor: doctor?.color,
+      borderColor: doctor?.color,
       extendedProps: {
         isBooked: availability.isBooked,
         doctorId: availability.doctorId,
@@ -140,6 +152,14 @@ export function DoctorsSchedule() {
     const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase());
   });
+
+  if (isLoadingDoctors) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -174,7 +194,13 @@ export function DoctorsSchedule() {
                 setSearchTerm("");
               }}
             >
-              {doctor.lastName} {doctor.firstName}
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: doctor.color }}
+                />
+                {doctor.lastName} {doctor.firstName}
+              </div>
             </Button>
           ))}
         </div>
