@@ -55,7 +55,13 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
 
   const updateUser = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
+      // S'assurer que la couleur est incluse dans les données
+      const updateData = {
+        ...data,
+        color: data.color || generatePastelColor(),
+      };
+
+      const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, updateData);
       if (!res.ok) {
         const error = await res.text();
         throw new Error(error);
@@ -196,7 +202,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Couleur</FormLabel>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <FormControl>
                           <Input {...field} type="color" className="w-20 h-10" />
                         </FormControl>
@@ -206,10 +212,15 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                           onClick={() => {
                             const newColor = generatePastelColor();
                             field.onChange(newColor);
+                            form.setValue("color", newColor);
                           }}
                         >
                           Générer
                         </Button>
+                        <div 
+                          className="w-8 h-8 rounded-full border"
+                          style={{ backgroundColor: field.value }}
+                        />
                       </div>
                       <FormMessage />
                     </FormItem>

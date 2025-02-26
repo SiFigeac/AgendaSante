@@ -138,7 +138,6 @@ export function DoctorsSchedule() {
     });
   };
 
-  // Filtrer les médecins en fonction du terme de recherche
   const filteredDoctors = doctors?.filter(doctor => {
     const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase());
@@ -200,12 +199,11 @@ export function DoctorsSchedule() {
       <style>
         {`
           .fc-timegrid-event-harness {
-            margin: 0 4px !important;
+            margin: 0 !important;
           }
           .fc-timegrid-event {
             border: none !important;
-            padding: 2px !important;
-            margin: 0 !important;
+            margin: 1px 2px !important;
           }
           .fc-timegrid-event .fc-event-main {
             padding: 2px 4px !important;
@@ -213,38 +211,45 @@ export function DoctorsSchedule() {
           .fc .fc-timegrid-slot {
             height: 3em !important;
           }
+          .fc .fc-timegrid-slot-lane {
+            border-bottom: 1px solid var(--border) !important;
+          }
           .fc .fc-timegrid-col-events {
-            margin: 0 6px !important;
+            margin: 0 !important;
+          }
+          .fc-direction-ltr .fc-timegrid-col-events {
+            margin: 0 2% !important;
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 0 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            transition: transform 0.2s ease !important;
           }
           .availability-event:hover {
             transform: scale(1.02);
-            z-index: 5 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
           }
-          .fc-v-event {
-            border: none !important;
-          }
-          .fc-timegrid-event-harness-inset .fc-timegrid-event {
-            box-shadow: none !important;
-          }
-          .fc .fc-timegrid-now-indicator-line {
-            border-color: #ef4444;
-          }
-          .fc .fc-timegrid-now-indicator-arrow {
-            border-color: #ef4444;
-          }
-          .fc-event-selected,
-          .fc-event:focus {
+          .fc-event-selected {
             box-shadow: 0 0 0 2px #000 !important;
           }
+          .fc-event-dragging {
+            opacity: 0.7;
+          }
           .fc-timegrid-event.fc-event-mirror {
-            background-color: rgba(255, 255, 255, 0.75) !important;
+            opacity: 0.7;
+          }
+          .fc-timegrid-more-link {
+            background: none;
+            border: 1px solid var(--border);
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: var(--foreground);
+          }
+          .fc-timegrid-now-indicator-line {
+            border-color: #ef4444;
+          }
+          .fc-timegrid-now-indicator-arrow {
+            border-color: #ef4444;
           }
         `}
       </style>
@@ -276,7 +281,13 @@ export function DoctorsSchedule() {
           nowIndicator={true}
           slotEventOverlap={true}
           forceEventDuration={true}
+          displayEventEnd={true}
           eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
+          slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
