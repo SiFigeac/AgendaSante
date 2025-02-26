@@ -19,6 +19,7 @@ import { Loader2 } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import multiMonthPlugin from "@fullcalendar/multimonth";
 import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
 
@@ -252,6 +253,24 @@ export function DoctorsSchedule() {
           .fc-timegrid-now-indicator-arrow {
             border-color: #ef4444 !important;
           }
+          .fc-multimonth-title {
+            font-size: 1.25rem !important;
+            padding: 0.5rem !important;
+            background-color: var(--background) !important;
+            border-bottom: 1px solid var(--border) !important;
+          }
+          .fc-multimonth-header {
+            background-color: var(--muted) !important;
+          }
+          .fc-multimonth-daygrid {
+            background-color: var(--background) !important;
+          }
+          .fc-multimonth-month {
+            border: 1px solid var(--border) !important;
+            border-radius: 0.5rem !important;
+            overflow: hidden !important;
+            margin: 0.5rem !important;
+          }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
               flex-direction: column;
@@ -272,12 +291,18 @@ export function DoctorsSchedule() {
 
       <div className="rounded-md border overflow-hidden">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            right: 'multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          views={{
+            multiMonthYear: {
+              type: 'multiMonth',
+              duration: { years: 1 }
+            }
           }}
           locale={frLocale}
           slotMinTime="08:00:00"
