@@ -13,6 +13,7 @@ import frLocale from "@fullcalendar/core/locales/fr";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns'
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,6 +55,25 @@ export function DoctorsSchedule() {
     },
   });
 
+  const events = availabilities?.map(availability => {
+    const doctor = doctors?.find(d => d.id === availability.doctorId);
+    return {
+      id: availability.id.toString(),
+      resourceId: availability.id.toString(), // Added resourceId
+      title: doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : "Disponible",
+      start: new Date(availability.startTime).toISOString(), // Changed to ISOString
+      end: new Date(availability.endTime).toISOString(),     // Changed to ISOString
+      backgroundColor: doctor?.color || '#cbd5e1',
+      borderColor: doctor?.color || '#cbd5e1',
+      textColor: '#000000',
+      display: 'block',
+      extendedProps: {
+        isBooked: availability.isBooked,
+        doctorId: availability.doctorId,
+      }
+    };
+  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor) || [];
+
   const handleEventDrop = (info: EventDropArg) => {
     const eventId = parseInt(info.event.id);
     const startTime = info.event.start;
@@ -66,41 +86,6 @@ export function DoctorsSchedule() {
 
     updateAvailability.mutate({ id: eventId, startTime, endTime });
   };
-
-  const events = availabilities?.map(availability => {
-    const doctor = doctors?.find(d => d.id === availability.doctorId);
-    return {
-      id: availability.id.toString(),
-      title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
-      start: availability.startTime,
-      end: availability.endTime,
-      backgroundColor: doctor?.color || '#cbd5e1',
-      borderColor: doctor?.color || '#cbd5e1',
-      textColor: '#000000',
-      classNames: ['availability-event'],
-      extendedProps: {
-        isBooked: availability.isBooked,
-        doctorId: availability.doctorId,
-      }
-    };
-  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
-
-  // Filtrer les médecins selon la recherche
-  const filteredDoctors = doctors?.filter(doctor => {
-    const search = searchTerm.toLowerCase();
-    if (!search) return true;
-    const lastName = (doctor.lastName || '').toLowerCase();
-    const firstName = (doctor.firstName || '').toLowerCase();
-    return lastName.includes(search) || firstName.includes(search);
-  });
-
-  if (!doctors) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -122,9 +107,9 @@ export function DoctorsSchedule() {
         </div>
       </div>
 
-      {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
+      {searchTerm && doctors && doctors.length > 0 && !selectedDoctor && (
         <div className="border rounded-md p-2 space-y-1 bg-card">
-          {filteredDoctors.map(doctor => (
+          {doctors.map(doctor => (
             <Button
               key={doctor.id}
               variant="ghost"
@@ -152,58 +137,33 @@ export function DoctorsSchedule() {
             height: 100%;
             min-height: 700px;
           }
-          .fc-daygrid-day {
-            min-height: 150px !important;
-          }
           .fc-timegrid-slot {
-            height: 4em !important;
+            height: 6em !important;
           }
-          .availability-event {
-            border-radius: 4px !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.2s ease !important;
+          .fc-timegrid-slot-lane {
+            height: 6em !important;
           }
-          .availability-event:hover {
-            transform: scale(1.02);
-            z-index: 5 !important;
+          .fc-v-event {
+            display: block !important;
+            border: none !important;
+            background-color: var(--background) !important;
           }
           .fc-timegrid-event-harness {
-            width: 95% !important;
-            left: 2.5% !important;
-            margin: 2px 0 !important;
-            position: relative !important;
+            margin: 1px !important;
+            left: 0 !important;
+            right: 0 !important;
           }
           .fc-timegrid-event {
-            border: none !important;
-            height: 100% !important;
+            border-radius: 4px !important;
+            margin: 0 4px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          }
+          .fc-event-time, .fc-event-title {
+            padding: 2px 4px !important;
+            font-size: 0.875rem !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          .fc-event-time {
-            display: none !important;
-          }
-          .fc-event-title {
-            padding: 4px !important;
-            font-size: 0.875rem !important;
-            white-space: normal !important;
-          }
-          .fc-v-event {
-            border: none !important;
-          }
-          @media (max-width: 640px) {
-            .fc .fc-toolbar {
-              flex-direction: column;
-              gap: 1rem;
-            }
-            .fc .fc-toolbar-title {
-              font-size: 1.2rem;
-            }
-            .fc-header-toolbar {
-              margin-bottom: 1.5em !important;
-            }
           }
         `}
       </style>
@@ -229,25 +189,23 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={true}
           nowIndicator={true}
           slotEventOverlap={false}
           forceEventDuration={true}
-          displayEventEnd={false}
+          displayEventEnd={true}
           slotDuration="01:00:00"
-          slotLabelFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }}
-          eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }}
-          eventDidMount={(info) => {
-            info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-          }}
+          eventContent={(info) => (
+            <div className="fc-event-main-frame">
+              <div className="fc-event-title-container">
+                <div className="fc-event-title fc-sticky">
+                  {info.event.title}
+                </div>
+                <div className="text-xs opacity-75">
+                  {format(new Date(info.event.start!), 'HH:mm')} - {format(new Date(info.event.end!), 'HH:mm')}
+                </div>
+              </div>
+            </div>
+          )}
           eventClick={(info) => setSelectedEvent({
             id: parseInt(info.event.id),
             title: info.event.title,
@@ -267,9 +225,9 @@ export function DoctorsSchedule() {
                 <>
                   {selectedEvent.title}
                   <br />
-                  Du {new Date(selectedEvent.start).toLocaleString('fr-FR')}
+                  Du {format(new Date(selectedEvent.start), 'dd/MM/yyyy HH:mm')}
                   <br />
-                  Au {new Date(selectedEvent.end).toLocaleString('fr-FR')}
+                  Au {format(new Date(selectedEvent.end), 'dd/MM/yyyy HH:mm')}
                 </>
               )}
             </DialogDescription>

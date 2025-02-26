@@ -1,6 +1,6 @@
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useQuery } from "@tanstack/react-query";
-import type { Appointment, Patient } from "@shared/schema";
+import type { Appointment } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -15,7 +15,7 @@ export default function CalendarPage() {
     queryKey: ["/api/appointments"],
   });
 
-  const { data: patients } = useQuery<Patient[]>({
+  const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
   });
 
@@ -29,17 +29,21 @@ export default function CalendarPage() {
     setShowAddAppointment(true);
   };
 
-  const events = appointments?.map(appointment => {
+  const formattedAppointments = appointments?.map(appointment => {
     const doctor = doctors?.find(d => d.id === appointment.doctorId);
     const patient = patients?.find(p => p.id === appointment.patientId);
+
     return {
       id: appointment.id.toString(),
+      resourceId: appointment.id.toString(),
       title: patient ? `${patient.lastName} ${patient.firstName}` : "Patient inconnu",
-      start: appointment.startTime,
-      end: appointment.endTime,
+      start: new Date(appointment.startTime).toISOString(),
+      end: new Date(appointment.endTime).toISOString(),
       backgroundColor: doctor?.color || '#cbd5e1',
       borderColor: doctor?.color || '#cbd5e1',
+      display: 'block',
       extendedProps: {
+        appointment,
         patient,
         doctor,
         type: appointment.type,
@@ -47,7 +51,7 @@ export default function CalendarPage() {
         notes: appointment.notes
       }
     };
-  });
+  }) || [];
 
   return (
     <div className="flex h-screen">
@@ -102,7 +106,7 @@ export default function CalendarPage() {
         <div className="rounded-md border p-4">
           {appointments && patients && doctors && (
             <AppointmentCalendar
-              appointments={events}
+              appointments={formattedAppointments}
               patients={patients}
               onDateSelect={handleDateSelect}
             />
