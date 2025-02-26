@@ -70,14 +70,14 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold">Calendrier</h1>
           <div className="flex items-center gap-4">
             <Select
-              value={selectedDoctorId || ""}
-              onValueChange={(value) => setSelectedDoctorId(value || null)}
+              value={selectedDoctorId || "all"}
+              onValueChange={(value) => setSelectedDoctorId(value === "all" ? null : value)}
             >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Tous les médecins" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les médecins</SelectItem>
+                <SelectItem value="all">Tous les médecins</SelectItem>
                 {doctors?.map((doctor) => (
                   <SelectItem key={doctor.id} value={doctor.id.toString()}>
                     Dr. {doctor.lastName} {doctor.firstName}
