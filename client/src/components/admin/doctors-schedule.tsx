@@ -17,10 +17,8 @@ import { Loader2 } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import multiMonthPlugin from "@fullcalendar/multimonth";
-import listPlugin from "@fullcalendar/list";
-import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
+import frLocale from "@fullcalendar/core/locales/fr";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -200,70 +198,52 @@ export function DoctorsSchedule() {
           .fc {
             height: 100%;
             min-height: 700px;
-            --fc-border-color: var(--border);
-            --fc-button-text-color: var(--foreground);
-            --fc-button-bg-color: var(--primary);
-            --fc-button-border-color: var(--primary);
-            --fc-button-hover-bg-color: var(--primary-hover);
-            --fc-button-hover-border-color: var(--primary-hover);
-            --fc-button-active-bg-color: var(--primary-active);
-            --fc-button-active-border-color: var(--primary-active);
-          }
-          .fc .fc-button {
-            @apply shadow-sm;
-          }
-          .fc .fc-button-primary:not(:disabled) {
-            @apply bg-primary text-primary-foreground hover:bg-primary/90;
-          }
-          .fc .fc-toolbar-title {
-            @apply text-xl font-semibold;
           }
           .availability-event {
-            @apply rounded-md shadow-sm transition-transform duration-200;
+            border-radius: 4px !important;
+            margin: 1px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s ease !important;
           }
           .availability-event:hover {
-            @apply transform scale-[1.02] shadow-md z-10;
+            transform: scale(1.02);
+            z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            @apply m-0;
-          }
-          .fc-timegrid-event {
-            @apply border-none m-[1px];
-          }
-          .fc-timegrid-event .fc-event-main {
-            @apply p-2 text-sm;
-          }
-          .fc .fc-timegrid-slot {
-            @apply h-12;
-          }
-          .fc .fc-timegrid-col-events {
-            @apply m-0;
-          }
-          .fc-direction-ltr .fc-timegrid-col-events {
-            @apply mx-[1%];
-          }
-          .fc-timegrid-event-harness {
-            margin: 0 1px !important;
-          }
-          .fc-timegrid-event {
             margin: 0 !important;
+          }
+          .fc-timegrid-event {
             border: none !important;
+            margin: 0 !important;
           }
           .fc-v-event {
-            @apply border-none;
+            border: none !important;
+          }
+          .fc .fc-timegrid-slot {
+            height: 3em !important;
+          }
+          .fc .fc-timegrid-slot-lane {
+            border-bottom: 1px solid var(--border) !important;
+          }
+          .fc .fc-timegrid-col-events {
+            margin: 0 !important;
+          }
+          .fc-direction-ltr .fc-timegrid-col-events {
+            margin: 0 1% !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
-              @apply flex-col gap-4;
+              flex-direction: column;
+              gap: 1rem;
             }
             .fc .fc-toolbar-title {
-              @apply text-lg;
+              font-size: 1.2rem;
             }
             .fc-header-toolbar {
-              @apply mb-6;
+              margin-bottom: 1.5em !important;
             }
             .fc-timegrid-event .fc-event-main {
-              @apply text-xs;
+              font-size: 0.75rem !important;
             }
           }
         `}
@@ -271,23 +251,12 @@ export function DoctorsSchedule() {
 
       <div className="rounded-lg border overflow-hidden bg-card">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, multiMonthPlugin, listPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-          }}
-          views={{
-            multiMonthYear: {
-              type: 'multiMonth',
-              duration: { years: 1 }
-            },
-            listWeek: {
-              type: 'list',
-              duration: { days: 30 },
-              buttonText: '30 jours'
-            }
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
           }}
           locale={frLocale}
           slotMinTime="08:00:00"
@@ -301,9 +270,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={false}
+          eventOverlap={true}
           nowIndicator={true}
-          slotEventOverlap={false}
+          slotEventOverlap={true}
           forceEventDuration={true}
           displayEventEnd={true}
           eventTimeFormat={{

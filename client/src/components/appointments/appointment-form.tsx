@@ -10,7 +10,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
+import { useState } from "react";
 
 interface AppointmentFormProps {
   open: boolean;
@@ -20,6 +21,8 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
   const { toast } = useToast();
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [showDoctorResults, setShowDoctorResults] = useState(false);
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
@@ -42,6 +45,13 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   // Obtenir le patient sélectionné
   const selectedPatientId = form.watch("patientId");
   const selectedPatient = patients?.find((p: any) => p.id === selectedPatientId);
+
+  // Filtrer les médecins selon la recherche
+  const filteredDoctors = doctors?.filter((doctor: any) => {
+    if (!doctorSearch) return true; //Show all doctors if search is empty.
+    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+    return fullName.includes(doctorSearch.toLowerCase());
+  });
 
   const createAppointment = useMutation({
     mutationFn: async (data) => {
@@ -115,29 +125,43 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un médecin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {doctors?.map((doctor: any) => (
-                        <SelectItem 
-                          key={doctor.id} 
-                          value={doctor.id.toString()}
-                        >
-                          <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          placeholder="Rechercher un médecin..."
+                          value={doctorSearch}
+                          onChange={(e) => {
+                            setDoctorSearch(e.target.value);
+                            setShowDoctorResults(true);
+                          }}
+                          onFocus={() => setShowDoctorResults(true)}
+                        />
+                      </FormControl>
+                      <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                    </div>
+                    {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
+                        {filteredDoctors.map((doctor: any) => (
+                          <div
+                            key={doctor.id}
+                            className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                              field.onChange(doctor.id);
+                              setDoctorSearch(`${doctor.firstName} ${doctor.lastName}`);
+                              setShowDoctorResults(false);
+                            }}
+                          >
                             <div
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: doctor.color }}
                             />
-                            {doctor.lastName} {doctor.firstName}
+                            <span>{doctor.lastName} {doctor.firstName}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
