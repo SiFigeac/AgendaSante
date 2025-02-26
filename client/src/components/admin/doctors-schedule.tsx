@@ -205,11 +205,12 @@ export function DoctorsSchedule() {
             margin: 0 !important;
           }
           .fc-timegrid-event {
-            margin: 1px !important;
             border: none !important;
+            margin: 0 !important;
           }
           .fc-timegrid-event .fc-event-main {
-            padding: 4px !important;
+            padding: 2px 4px !important;
+            font-size: 0.875rem !important;
           }
           .fc .fc-timegrid-slot {
             height: 3em !important;
@@ -219,34 +220,37 @@ export function DoctorsSchedule() {
           }
           .fc .fc-timegrid-col-events {
             margin: 0 !important;
+            position: relative !important;
           }
           .fc-direction-ltr .fc-timegrid-col-events {
             margin: 0 1% !important;
           }
           .availability-event {
             border-radius: 4px !important;
+            margin: 1px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.2s ease !important;
+            opacity: 0.9 !important;
           }
           .availability-event:hover {
-            transform: scale(1.01);
+            opacity: 1 !important;
             z-index: 5 !important;
+            transform: scale(1.02);
           }
-          .fc-event-selected {
-            box-shadow: 0 0 0 2px #000 !important;
+          .fc-timegrid-event.fc-event-mirror {
+            opacity: 0.7 !important;
           }
           .fc-timegrid-more-link {
-            background: none;
-            border: 1px solid var(--border);
-            padding: 2px 4px;
-            border-radius: 4px;
-            color: var(--foreground);
+            background: none !important;
+            border: 1px solid var(--border) !important;
+            padding: 2px 4px !important;
+            border-radius: 4px !important;
+            color: var(--foreground) !important;
           }
           .fc-timegrid-now-indicator-line {
-            border-color: #ef4444;
+            border-color: #ef4444 !important;
           }
           .fc-timegrid-now-indicator-arrow {
-            border-color: #ef4444;
+            border-color: #ef4444 !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -258,6 +262,9 @@ export function DoctorsSchedule() {
             }
             .fc-header-toolbar {
               margin-bottom: 1.5em !important;
+            }
+            .fc-timegrid-event .fc-event-main {
+              font-size: 0.75rem !important;
             }
           }
         `}
@@ -286,9 +293,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={true}
+          eventOverlap={false}
           nowIndicator={true}
-          slotEventOverlap={true}
+          slotEventOverlap={false}
           forceEventDuration={true}
           displayEventEnd={true}
           eventTimeFormat={{
