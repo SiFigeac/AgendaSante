@@ -8,6 +8,7 @@ import { UserForm } from "@/components/admin/user-form";
 import { UserList } from "@/components/admin/user-list";
 import { AvailabilityManager } from "@/components/admin/availability-manager";
 import { DoctorsSchedule } from "@/components/admin/doctors-schedule";
+import { RoleManager } from "@/components/admin/role-manager";
 
 export default function AdminPage() {
   const { user: currentUser } = useAuth();
@@ -29,6 +30,7 @@ export default function AdminPage() {
         <Tabs defaultValue="users" className="space-y-4">
           <TabsList>
             <TabsTrigger value="users">Gestion des utilisateurs</TabsTrigger>
+            <TabsTrigger value="roles">Gestion des rôles</TabsTrigger>
             <TabsTrigger value="availability">Plages horaires</TabsTrigger>
             <TabsTrigger value="schedule">Planning des médecins</TabsTrigger>
           </TabsList>
@@ -42,6 +44,10 @@ export default function AdminPage() {
             </div>
 
             <UserList />
+          </TabsContent>
+
+          <TabsContent value="roles">
+            <RoleManager />
           </TabsContent>
 
           <TabsContent value="availability">
