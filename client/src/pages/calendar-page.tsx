@@ -19,16 +19,35 @@ export default function CalendarPage() {
     queryKey: ["/api/patients"],
   });
 
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/admin/users"],
+    select: (users) => users?.filter((u: any) => u.role === "doctor"),
+  });
+
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
     setShowAddAppointment(true);
   };
 
-  const handleEventClick = (appointment: Appointment) => {
-    // Pour l'instant, on ne fait rien lors du clic sur un rendez-vous
-    // À implémenter : ouverture d'un modal de détails/modification
-    console.log('Rendez-vous cliqué:', appointment);
-  };
+  const events = appointments?.map(appointment => {
+    const doctor = doctors?.find(d => d.id === appointment.doctorId);
+    const patient = patients?.find(p => p.id === appointment.patientId);
+    return {
+      id: appointment.id.toString(),
+      title: patient ? `${patient.lastName} ${patient.firstName}` : "Patient inconnu",
+      start: appointment.startTime,
+      end: appointment.endTime,
+      backgroundColor: doctor?.color || '#cbd5e1',
+      borderColor: doctor?.color || '#cbd5e1',
+      extendedProps: {
+        patient,
+        doctor,
+        type: appointment.type,
+        status: appointment.status,
+        notes: appointment.notes
+      }
+    };
+  });
 
   return (
     <div className="flex h-screen">
@@ -44,13 +63,48 @@ export default function CalendarPage() {
           </Button>
         </div>
 
+        <style>
+          {`
+            .fc {
+              height: 100%;
+              min-height: 700px;
+            }
+            .fc-timegrid-slot {
+              height: 6em !important;
+            }
+            .fc-timegrid-slot-lane {
+              height: 6em !important;
+            }
+            .fc-timegrid-event-harness {
+              margin: 2px 0 !important;
+            }
+            .fc-timegrid-event {
+              margin: 0 4px !important;
+              border-radius: 4px !important;
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            }
+            .fc-event-time {
+              font-size: 0.875rem !important;
+              padding: 2px 4px !important;
+            }
+            .fc-event-title {
+              padding: 2px 4px !important;
+              font-size: 0.875rem !important;
+            }
+            .fc-daygrid-event {
+              margin: 2px 4px !important;
+              padding: 2px 4px !important;
+              border-radius: 4px !important;
+            }
+          `}
+        </style>
+
         <div className="rounded-md border p-4">
-          {appointments && patients && (
+          {appointments && patients && doctors && (
             <AppointmentCalendar
-              appointments={appointments}
+              appointments={events}
               patients={patients}
               onDateSelect={handleDateSelect}
-              onEventClick={handleEventClick}
             />
           )}
         </div>
