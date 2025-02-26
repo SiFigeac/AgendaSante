@@ -72,35 +72,31 @@ export function DayPreviewDialog({
                   </div>
 
                   <div className="p-3 space-y-3">
-                    {/* Motif de la consultation */}
-                    {apt.extendedProps.appointment.motif && (
-                      <div className="bg-primary/5 border rounded-md p-3">
-                        <div className="text-[13px]">
-                          <span className="font-medium">Motif : </span>
-                          {apt.extendedProps.appointment.motif}
-                        </div>
-                      </div>
-                    )}
+                    {/* Horaire, type et motif */}
+                    <div className="text-sm flex items-center gap-2.5 flex-wrap">
+                      <span className="font-medium whitespace-nowrap">
+                        {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
+                      </span>
+                      <span className="text-muted-foreground/70">•</span>
+                      <span className="capitalize whitespace-nowrap">
+                        {apt.extendedProps.type === 'consultation' ? 'Consultation' :
+                         apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                      </span>
+                      {apt.extendedProps.appointment.motif && (
+                        <>
+                          <span className="text-muted-foreground/70">•</span>
+                          <span className="text-foreground font-medium">
+                            {apt.extendedProps.appointment.motif}
+                          </span>
+                        </>
+                      )}
+                    </div>
 
-                    <div className="text-sm text-muted-foreground space-y-2">
-                      {/* Médecin */}
-                      <div>
-                        {apt.extendedProps.doctor ? 
-                          `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
-                          'Médecin non assigné'}
-                      </div>
-
-                      {/* Horaire et type */}
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
-                          {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
-                        </span>
-                        <span>•</span>
-                        <span className="capitalize">
-                          {apt.extendedProps.type === 'consultation' ? 'Consultation' :
-                           apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
-                        </span>
-                      </div>
+                    {/* Médecin */}
+                    <div className="text-sm text-muted-foreground">
+                      {apt.extendedProps.doctor ? 
+                        `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
+                        'Médecin non assigné'}
                     </div>
                   </div>
                 </div>
