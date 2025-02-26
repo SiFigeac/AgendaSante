@@ -21,13 +21,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { RoleForm } from "./role-form";
 import { PREDEFINED_ROLES } from "@/lib/roles";
-import { useToast } from "@/hooks/use-toast";
 
 export function RoleManager() {
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
   const [roleToDelete, setRoleToDelete] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
-  const { toast } = useToast();
 
   const handleEditRole = (role: typeof PREDEFINED_ROLES[0]) => {
     setSelectedRole(role);
@@ -43,10 +41,6 @@ export function RoleManager() {
     if (roleToDelete) {
       // TODO: Implement role deletion API
       console.log("Deleting role:", roleToDelete);
-      toast({
-        title: "Rôle supprimé",
-        description: `Le rôle ${roleToDelete.displayName} a été supprimé avec succès.`,
-      });
       setRoleToDelete(null);
     }
   };
