@@ -21,11 +21,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { RoleForm } from "./role-form";
 import { PREDEFINED_ROLES } from "@/lib/roles";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function RoleManager() {
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
   const [roleToDelete, setRoleToDelete] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleEditRole = (role: typeof PREDEFINED_ROLES[0]) => {
     setSelectedRole(role);
@@ -37,11 +42,34 @@ export function RoleManager() {
     setShowRoleForm(true);
   };
 
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleName: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/roles/${roleName}`);
+      if (!res.ok) {
+        throw new Error("Erreur lors de la suppression du rôle");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
+      toast({
+        title: "Succès",
+        description: `Le rôle ${roleToDelete?.displayName} a été supprimé.`,
+      });
+      setRoleToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDeleteConfirm = () => {
     if (roleToDelete) {
-      // TODO: Implement role deletion API
-      console.log("Deleting role:", roleToDelete);
-      setRoleToDelete(null);
+      deleteRoleMutation.mutate(roleToDelete.name);
     }
   };
 
@@ -101,6 +129,7 @@ export function RoleManager() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setRoleToDelete(role)}
+                      disabled={deleteRoleMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                       <span className="sr-only">Supprimer le rôle</span>
@@ -130,7 +159,10 @@ export function RoleManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Non, annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              disabled={deleteRoleMutation.isPending}
+            >
               Oui, supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
