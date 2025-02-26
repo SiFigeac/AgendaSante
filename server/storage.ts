@@ -199,7 +199,11 @@ export class DatabaseStorage implements IStorage {
   async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
     try {
       // Vérifier si la disponibilité existe
-      const existing = await this.getAvailability(id);
+      const [existing] = await db
+        .select()
+        .from(availabilityTable)
+        .where(eq(availabilityTable.id, id));
+
       if (!existing) {
         throw new Error("Cette plage horaire n'existe pas");
       }
@@ -218,17 +222,14 @@ export class DatabaseStorage implements IStorage {
         throw new Error("La date de début doit être antérieure à la date de fin");
       }
 
-      // Créer l'objet de mise à jour avec les dates validées
-      const formattedUpdate = {
-        ...update,
-        startTime,
-        endTime,
-      };
-
       // Effectuer la mise à jour
       const [updated] = await db
         .update(availabilityTable)
-        .set(formattedUpdate)
+        .set({
+          ...update,
+          startTime,
+          endTime,
+        })
         .where(eq(availabilityTable.id, id))
         .returning();
 
@@ -239,7 +240,7 @@ export class DatabaseStorage implements IStorage {
       return updated;
     } catch (error) {
       console.error('Error in updateAvailability:', error);
-      throw error instanceof Error ? error : new Error("Erreur inconnue lors de la mise à jour");
+      throw error instanceof Error ? error : new Error("Erreur lors de la mise à jour");
     }
   }
 

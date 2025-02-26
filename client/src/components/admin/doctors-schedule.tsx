@@ -38,27 +38,16 @@ export function DoctorsSchedule() {
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
       try {
-        const startTime = new Date(data.startTime);
-        const endTime = new Date(data.endTime);
+        console.log("Updating availability with data:", data);
 
-        // Validation des dates
-        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-          throw new Error("Les dates sélectionnées sont invalides");
-        }
-
-        if (startTime >= endTime) {
-          throw new Error("La date de début doit être antérieure à la date de fin");
-        }
-
-        const formattedData = {
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-        };
-
-        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, formattedData);
+        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
+          startTime: data.startTime.toISOString(),
+          endTime: data.endTime.toISOString(),
+        });
 
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: "Erreur inconnue" }));
+          const errorData = await res.json();
+          console.error("Update availability error response:", errorData);
           throw new Error(errorData.error || "Erreur lors de la mise à jour");
         }
 
@@ -76,6 +65,7 @@ export function DoctorsSchedule() {
       });
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Erreur",
         description: error.message,
@@ -88,13 +78,13 @@ export function DoctorsSchedule() {
     const eventEl = info.el;
 
     try {
-      // Valider l'ID de l'événement
+      console.log("Event drop - Start handling drop event");
+
       const eventId = parseInt(info.event.id);
       if (isNaN(eventId)) {
         throw new Error("ID d'événement invalide");
       }
 
-      // Valider les dates
       const startTime = info.event.start;
       const endTime = info.event.end;
 
@@ -102,23 +92,17 @@ export function DoctorsSchedule() {
         throw new Error("Dates invalides pour la plage horaire");
       }
 
-      if (startTime >= endTime) {
-        throw new Error("La date de début doit être antérieure à la date de fin");
-      }
+      console.log("Event drop - Dates:", { startTime, endTime });
 
       // Retour visuel pendant la mise à jour
       eventEl.style.opacity = "0.5";
       eventEl.style.cursor = "wait";
 
-      // Tenter la mise à jour avec une promesse
-      await new Promise<void>((resolve, reject) => {
-        updateAvailability.mutate(
-          { id: eventId, startTime, endTime },
-          {
-            onSuccess: () => resolve(),
-            onError: (error) => reject(error),
-          }
-        );
+      // Utiliser mutateAsync pour une meilleure gestion des erreurs
+      await updateAvailability.mutateAsync({
+        id: eventId,
+        startTime,
+        endTime,
       });
 
     } catch (error) {
@@ -130,7 +114,6 @@ export function DoctorsSchedule() {
         variant: "destructive",
       });
     } finally {
-      // Restaurer l'apparence normale
       if (eventEl) {
         eventEl.style.opacity = "";
         eventEl.style.cursor = "";
@@ -283,11 +266,6 @@ export function DoctorsSchedule() {
           eventDrop={handleEventDrop}
           dragScroll={true}
           dayMaxEvents={true}
-          eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }}
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
@@ -299,10 +277,14 @@ export function DoctorsSchedule() {
             info.el.style.cursor = 'grab';
           }}
           eventDragStart={(info) => {
+            console.log("Event drag start");
             info.el.style.cursor = 'grabbing';
+            info.el.style.opacity = '0.7';
           }}
           eventDragStop={(info) => {
+            console.log("Event drag stop");
             info.el.style.cursor = 'grab';
+            info.el.style.opacity = '';
           }}
           eventClick={handleEventClick}
         />
