@@ -196,111 +196,107 @@ export function DoctorsSchedule() {
       )}
 
       <style>
-        {`
-          .fc {
-            height: 100%;
-            min-height: 700px;
-          }
-          .availability-event {
-            border-radius: 4px !important;
-            margin: 0 2px !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.2s ease !important;
-          }
-          .availability-event:hover {
-            transform: scale(1.02);
-            z-index: 5 !important;
-          }
-          .fc-timegrid-event-harness {
-            margin: 0 !important;
-          }
-          .fc-timegrid-event {
-            margin: 0 1% !important;
-            border: none !important;
-          }
-          .fc .fc-timegrid-slot {
-            height: 3em !important;
-          }
-          .fc .fc-timegrid-slot-label {
-            height: 3em !important;
-          }
-          .fc .fc-timegrid-slot-lane {
-            height: 3em !important;
-          }
-          .fc .fc-timegrid-col-events {
-            margin: 0 !important;
-          }
-          .fc-direction-ltr .fc-timegrid-col-events {
-            margin: 0 !important;
-          }
-          .fc-v-event {
-            border: none !important;
-          }
-          .fc-timegrid-event.fc-event-mirror {
-            opacity: 0.7 !important;
-          }
-          @media (max-width: 640px) {
-            .fc .fc-toolbar {
-              flex-direction: column;
-              gap: 1rem;
+          {`
+            .fc {
+              height: 100%;
+              min-height: 700px;
             }
-            .fc .fc-toolbar-title {
-              font-size: 1.2rem;
+            .availability-event {
+              border-radius: 4px !important;
+              margin: 0 1px !important;
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+              transition: all 0.2s ease !important;
             }
-            .fc-header-toolbar {
-              margin-bottom: 1.5em !important;
+            .availability-event:hover {
+              transform: scale(1.02);
+              z-index: 5 !important;
             }
-            .fc-timegrid-event .fc-event-main {
-              font-size: 0.75rem !important;
-              padding: 2px !important;
+            .fc-timegrid-event-harness {
+              left: 0 !important;
+              right: 0 !important;
             }
-          }
-        `}
-      </style>
+            .fc-timegrid-event {
+              margin: 0 1px !important;
+              border: none !important;
+            }
+            .fc-timegrid-slot {
+              height: 3em !important;
+            }
+            .fc-timegrid-col-events {
+              margin: 0 !important;
+            }
+            .fc-v-event {
+              border: none !important;
+            }
+            .fc-event-time {
+              font-size: 0.9em !important;
+              padding: 0 2px !important;
+            }
+            .fc-event-title {
+              padding: 0 2px !important;
+            }
+            @media (max-width: 640px) {
+              .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 1rem;
+              }
+              .fc .fc-toolbar-title {
+                font-size: 1.2rem;
+              }
+              .fc-header-toolbar {
+                margin-bottom: 1.5em !important;
+              }
+              .fc-timegrid-event .fc-event-main {
+                font-size: 0.75rem !important;
+                padding: 2px !important;
+              }
+            }
+          `}
+        </style>
 
-      <div className="rounded-lg border overflow-hidden bg-card">
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
-          locale={frLocale}
-          slotMinTime="08:00:00"
-          slotMaxTime="20:00:00"
-          allDaySlot={false}
-          events={events}
-          editable={true}
-          eventDrop={handleEventDrop}
-          dragScroll={true}
-          dayMaxEvents={true}
-          snapDuration="00:15:00"
-          eventResizableFromStart={true}
-          eventDurationEditable={true}
-          eventOverlap={false}
-          nowIndicator={true}
-          slotEventOverlap={false}
-          forceEventDuration={true}
-          displayEventEnd={true}
-          slotLabelFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }}
-          eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }}
-          eventDidMount={(info) => {
-            const title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-            info.el.title = title;
-          }}
-          eventClick={handleEventClick}
-        />
-      </div>
+        <div className="rounded-lg border overflow-hidden bg-card">
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+            locale={frLocale}
+            slotMinTime="08:00:00"
+            slotMaxTime="20:00:00"
+            allDaySlot={false}
+            events={events}
+            editable={true}
+            eventDrop={handleEventDrop}
+            dragScroll={true}
+            dayMaxEvents={true}
+            snapDuration="00:15:00"
+            eventResizableFromStart={true}
+            eventDurationEditable={true}
+            eventOverlap={true}
+            nowIndicator={true}
+            slotEventOverlap={true}
+            forceEventDuration={true}
+            displayEventEnd={true}
+            slotLabelFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }}
+            eventTimeFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }}
+            eventDidMount={(info) => {
+              const title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+              info.el.title = title;
+            }}
+            eventClick={handleEventClick}
+          />
+        </div>
 
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <DialogContent>
