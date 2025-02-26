@@ -193,25 +193,28 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            margin: 0 2px !important;
+            margin: 0 !important;
           }
           .fc-timegrid-event {
             border: none !important;
+            margin: 0 2px !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
           }
-          .fc-v-event {
-            border: none !important;
+          .fc-timegrid-now-indicator-line {
+            border-color: var(--destructive) !important;
           }
-          .fc-timegrid-slot {
-            height: 3em !important;
+          .fc-timegrid-now-indicator-arrow {
+            border-color: var(--destructive) !important;
+            color: var(--destructive) !important;
           }
-          .fc-time-grid .fc-slats td {
-            height: 3em !important;
+          .fc-event-time {
+            font-size: 0.875rem !important;
+            padding: 0 4px !important;
           }
-          .fc-time-grid-event {
-            margin: 0 2px !important;
+          .fc-event-title {
+            padding: 0 4px !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -258,6 +261,15 @@ export function DoctorsSchedule() {
           slotEventOverlap={false}
           forceEventDuration={true}
           displayEventEnd={true}
+          eventConstraint={{
+            startTime: '08:00:00',
+            endTime: '20:00:00',
+            dows: [0, 1, 2, 3, 4, 5, 6]
+          }}
+          validRange={{
+            start: '2024-01-01',
+            end: '2026-12-31'
+          }}
           slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',

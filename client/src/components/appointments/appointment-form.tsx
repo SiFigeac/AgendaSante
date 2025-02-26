@@ -49,7 +49,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
     const search = searchTerm.toLowerCase();
-    if (!search) return doctors;
+    if (!search) return true;
     const lastName = doctor.lastName?.toLowerCase() || '';
     const firstName = doctor.firstName?.toLowerCase() || '';
     return lastName.includes(search) || firstName.includes(search);
@@ -127,38 +127,53 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="relative">
-                    <FormControl>
+                  <div className="flex gap-4 justify-end">
+                    <div className="flex gap-2 items-center w-full">
                       <Input
                         placeholder="Rechercher un médecin..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full"
                       />
-                    </FormControl>
+                      {selectedDoctor && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedDoctor(null);
+                            setSearchTerm("");
+                            field.onChange(null);
+                          }}
+                        >
+                          Effacer
+                        </Button>
+                      )}
+                    </div>
+                  </div>
 
-                    <div className="border rounded-md mt-1 max-h-48 overflow-y-auto">
-                      {filteredDoctors?.map((doctor: any) => (
+                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
+                    <div className="border rounded-md p-2 space-y-1 bg-card mt-2">
+                      {filteredDoctors.map(doctor => (
                         <Button
                           key={doctor.id}
-                          type="button"
                           variant="ghost"
-                          className="w-full flex items-center gap-2 justify-start p-2 hover:bg-accent"
+                          className="w-full justify-start"
                           onClick={() => {
                             field.onChange(doctor.id);
                             setSelectedDoctor(doctor.id);
                             setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
                           }}
                         >
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: doctor.color }}
-                          />
-                          <span>Dr. {doctor.lastName} {doctor.firstName}</span>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: doctor.color }}
+                            />
+                            {doctor.lastName} {doctor.firstName}
+                          </div>
                         </Button>
                       ))}
                     </div>
-                  </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
