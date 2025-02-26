@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,6 +55,28 @@ export function DoctorsSchedule() {
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour la plage horaire",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteAvailability = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/availability/${id}`);
+      if (!res.ok) throw new Error("Erreur lors de la suppression");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Succès",
+        description: "La plage horaire a été supprimée",
+      });
+      setSelectedEvent(null);
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la plage horaire",
         variant: "destructive",
       });
     },
@@ -230,6 +253,17 @@ export function DoctorsSchedule() {
             </DialogHeader>
 
             <div className="flex justify-end gap-2 mt-4">
+              <Button 
+                variant="destructive" 
+                onClick={() => deleteAvailability.mutate(selectedEvent.id)}
+                disabled={deleteAvailability.isPending}
+              >
+                {deleteAvailability.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Supprimer"
+                )}
+              </Button>
               <Button variant="outline" onClick={() => setSelectedEvent(null)}>
                 Fermer
               </Button>
