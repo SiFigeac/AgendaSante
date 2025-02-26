@@ -22,7 +22,6 @@ interface AppointmentFormProps {
 export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
   const { toast } = useToast();
   const [doctorSearch, setDoctorSearch] = useState("");
-  const [showDoctorResults, setShowDoctorResults] = useState(false);
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
@@ -48,15 +47,11 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
-    const searchTerm = doctorSearch.toLowerCase();
-    if (!searchTerm) return true;
-    const lastName = doctor.lastName?.toLowerCase() || '';
-    const firstName = doctor.firstName?.toLowerCase() || '';
-    return lastName.includes(searchTerm) || firstName.includes(searchTerm);
+    if (!doctorSearch.trim()) return true;
+    const searchTerm = doctorSearch.toLowerCase().trim();
+    const fullName = `${doctor.lastName} ${doctor.firstName}`.toLowerCase();
+    return fullName.includes(searchTerm);
   });
-
-  // État pour garder le médecin sélectionné
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
 
   const createAppointment = useMutation({
     mutationFn: async (data) => {
@@ -130,44 +125,36 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="relative">
-                    <div className="flex gap-2">
-                      <FormControl>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un médecin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <div className="px-2 py-1.5">
                         <Input
                           placeholder="Rechercher un médecin..."
                           value={doctorSearch}
-                          onChange={(e) => {
-                            setDoctorSearch(e.target.value);
-                            setShowDoctorResults(true);
-                          }}
-                          onFocus={() => setShowDoctorResults(true)}
+                          onChange={(e) => setDoctorSearch(e.target.value)}
+                          className="mb-2"
                         />
-                      </FormControl>
-                      <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                    </div>
-                    {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
-                        {filteredDoctors.map((doctor: any) => (
-                          <div
-                            key={doctor.id}
-                            className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
-                            onClick={() => {
-                              field.onChange(doctor.id);
-                              setSelectedDoctor(doctor);
-                              setDoctorSearch(`${doctor.lastName} ${doctor.firstName}`);
-                              setShowDoctorResults(false);
-                            }}
-                          >
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: doctor.color }}
-                            />
-                            <span>{doctor.lastName} {doctor.firstName}</span>
-                          </div>
-                        ))}
                       </div>
-                    )}
-                  </div>
+                      {filteredDoctors?.map((doctor: any) => (
+                        <SelectItem
+                          key={doctor.id}
+                          value={doctor.id.toString()}
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: doctor.color }}
+                          />
+                          <span>{doctor.lastName} {doctor.firstName}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

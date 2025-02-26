@@ -214,7 +214,6 @@ export function DoctorsSchedule() {
           }
           .fc-timegrid-event {
             border: none !important;
-            margin: 0 !important;
           }
           .fc .fc-timegrid-slot {
             height: 3em !important;
