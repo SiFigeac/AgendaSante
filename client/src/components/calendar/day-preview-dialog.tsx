@@ -23,7 +23,6 @@ export function DayPreviewDialog({
 }: DayPreviewDialogProps) {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  // Filtrer les rendez-vous pour la date sélectionnée
   const dayAppointments = appointments.filter(apt => {
     const aptDate = new Date(apt.start);
     return format(aptDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
@@ -48,48 +47,53 @@ export function DayPreviewDialog({
               dayAppointments.map((apt) => (
                 <div
                   key={apt.id}
-                  className="p-4 rounded-lg border flex flex-col gap-2 hover:bg-accent cursor-pointer"
+                  className="rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
                   onClick={() => setSelectedAppointment(apt.extendedProps.appointment)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{apt.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
+                  {/* En-tête avec patient et statut */}
+                  <div className="border-b p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: apt.backgroundColor }}
+                          />
+                          <span className="font-medium">{apt.title}</span>
+                        </div>
+                        {apt.extendedProps.appointment.motif && (
+                          <div className="text-sm pl-4">
+                            {apt.extendedProps.appointment.motif}
+                          </div>
+                        )}
                       </div>
+                      <Badge
+                        variant={apt.extendedProps.status === 'confirmed' ? 'default' :
+                                apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
+                        className="capitalize flex-shrink-0"
+                      >
+                        {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
+                         apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={apt.extendedProps.status === 'confirmed' ? 'default' :
-                              apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
-                      className="capitalize"
-                    >
-                      {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
-                       apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
-                    </Badge>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: apt.backgroundColor }}
-                      />
+
+                  {/* Détails du rendez-vous */}
+                  <div className="p-3 space-y-2">
+                    <div className="text-sm text-muted-foreground">
                       {apt.extendedProps.doctor ? 
                         `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
                         'Médecin non assigné'}
                     </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span>
-                        Type : {apt.extendedProps.type === 'consultation' ? 'Consultation' :
-                               apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">
+                        {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
                       </span>
-                      {apt.extendedProps.appointment.motif && (
-                        <>
-                          <span className="mx-2">•</span>
-                          <span>
-                            Motif : {apt.extendedProps.appointment.motif}
-                          </span>
-                        </>
-                      )}
+                      •
+                      <span className="capitalize">
+                        {apt.extendedProps.type === 'consultation' ? 'Consultation' :
+                         apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                      </span>
                     </div>
                   </div>
                 </div>
