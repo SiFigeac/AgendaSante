@@ -35,10 +35,10 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
               min-height: 700px;
             }
             .fc-timegrid-slot {
-              height: 6em !important;
+              height: 3.3em !important;
             }
             .fc-timegrid-slot-lane {
-              height: 6em !important;
+              height: 3.3em !important;
             }
             .fc-timegrid-event-harness {
               margin: 2px 0 !important;
