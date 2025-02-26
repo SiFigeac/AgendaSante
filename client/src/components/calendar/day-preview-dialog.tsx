@@ -4,7 +4,7 @@ import { fr } from "date-fns/locale";
 import type { Appointment, Patient } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { AppointmentDetailDialog } from "@/components/appointments/appointment-detail-dialog";
+import { AppointmentDetailDialog } from '@/components/appointments/appointment-detail-dialog';
 
 interface DayPreviewDialogProps {
   open: boolean;
@@ -29,12 +29,6 @@ export function DayPreviewDialog({
     return format(aptDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
   });
 
-  // Trouver le nom du patient - This function is no longer needed because apt.title provides the patient name.
-  // const getPatientName = (patientId: number) => {
-  //   const patient = patients.find(p => p.id === patientId);
-  //   return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
-  // };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,27 +48,45 @@ export function DayPreviewDialog({
               dayAppointments.map((apt) => (
                 <div
                   key={apt.id}
-                  className="p-4 rounded-lg border flex items-center justify-between hover:bg-accent cursor-pointer"
+                  className="p-4 rounded-lg border flex flex-col gap-2 hover:bg-accent cursor-pointer"
                   onClick={() => setSelectedAppointment(apt.extendedProps.appointment)}
                 >
-                  <div>
-                    <div className="font-medium">{apt.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{apt.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground capitalize">
+                    <Badge
+                      variant={apt.extendedProps.status === 'confirmed' ? 'default' :
+                              apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
+                       apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: apt.backgroundColor }}
+                      />
+                      {apt.extendedProps.doctor ? 
+                        `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
+                        'Médecin non assigné'}
+                    </div>
+                    <div className="mt-1">
                       Type : {apt.extendedProps.type === 'consultation' ? 'Consultation' :
                              apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                     </div>
+                    {apt.extendedProps.appointment.motif && (
+                      <div className="mt-1">
+                        Motif : {apt.extendedProps.appointment.motif}
+                      </div>
+                    )}
                   </div>
-                  <Badge
-                    variant={apt.extendedProps.status === 'confirmed' ? 'default' :
-                            apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
-                    className="capitalize"
-                  >
-                    {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
-                     apt.extendedProps.status === 'cancelled' ? 'Annulé' : 'Planifié'}
-                  </Badge>
                 </div>
               ))
             )}
