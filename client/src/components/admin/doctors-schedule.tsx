@@ -28,7 +28,7 @@ export function DoctorsSchedule() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: doctors, isLoading: isLoadingDoctors } = useQuery<User[]>({
+  const { data: doctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
     select: (users) => users?.filter(u => u.role === "doctor"),
   });
@@ -109,7 +109,6 @@ export function DoctorsSchedule() {
     );
   };
 
-  // Formater uniquement les plages horaires pour le calendrier
   const events = availabilities?.map(availability => {
     const doctor = doctors?.find(d => d.id === availability.doctorId);
     return {
@@ -143,7 +142,7 @@ export function DoctorsSchedule() {
     return fullName.includes(searchTerm.toLowerCase());
   });
 
-  if (isLoadingDoctors) {
+  if (!doctors) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -216,9 +215,6 @@ export function DoctorsSchedule() {
           .fc .fc-button-primary:not(:disabled) {
             @apply bg-primary text-primary-foreground hover:bg-primary/90;
           }
-          .fc .fc-button-primary:disabled {
-            @apply opacity-50 cursor-not-allowed;
-          }
           .fc .fc-toolbar-title {
             @apply text-xl font-semibold;
           }
@@ -246,17 +242,15 @@ export function DoctorsSchedule() {
           .fc-direction-ltr .fc-timegrid-col-events {
             @apply mx-[1%];
           }
+          .fc-timegrid-event-harness {
+            margin: 0 1px !important;
+          }
+          .fc-timegrid-event {
+            margin: 0 !important;
+            border: none !important;
+          }
           .fc-v-event {
             @apply border-none;
-          }
-          .fc-multimonth {
-            @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
-          }
-          .fc-multimonth-month {
-            @apply border rounded-lg overflow-hidden;
-          }
-          .fc-multimonth-title {
-            @apply text-lg font-semibold p-4 bg-muted/30;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {

@@ -10,7 +10,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 interface AppointmentFormProps {
@@ -21,7 +20,6 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
@@ -29,7 +27,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
   const { data: doctors } = useQuery({
     queryKey: ["/api/users"],
-    select: (users) => users.filter(u => u.role === "doctor"),
+    select: (users) => users?.filter((u: any) => u.role === "doctor"),
   });
 
   const form = useForm({
@@ -43,7 +41,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
   // Obtenir le patient sélectionné
   const selectedPatientId = form.watch("patientId");
-  const selectedPatient = patients?.find(p => p.id === selectedPatientId);
+  const selectedPatient = patients?.find((p: any) => p.id === selectedPatientId);
 
   const createAppointment = useMutation({
     mutationFn: async (data) => {
@@ -93,7 +91,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {patients?.map((patient) => (
+                      {patients?.map((patient: any) => (
                         <SelectItem key={patient.id} value={patient.id.toString()}>
                           {patient.firstName} {patient.lastName}
                         </SelectItem>
@@ -124,9 +122,18 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {doctors?.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                          {doctor.fullName}
+                      {doctors?.map((doctor: any) => (
+                        <SelectItem 
+                          key={doctor.id} 
+                          value={doctor.id.toString()}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: doctor.color }}
+                            />
+                            {doctor.lastName} {doctor.firstName}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
