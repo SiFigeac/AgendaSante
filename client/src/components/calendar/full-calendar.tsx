@@ -27,8 +27,14 @@ export function AppointmentCalendar({
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const handleDateClick = (info: { date: Date }) => {
-    setSelectedDate(info.date);
-    setShowDayPreview(true);
+    // Si un médecin est sélectionné, on ouvre directement le formulaire de création
+    if (selectedDoctorId) {
+      onDateSelect(info.date);
+    } else {
+      // Sinon, on montre la prévisualisation des rendez-vous du jour
+      setSelectedDate(info.date);
+      setShowDayPreview(true);
+    }
   };
 
   return (
