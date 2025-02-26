@@ -37,7 +37,7 @@ export interface IStorage {
   getAvailability(id: number): Promise<Availability | undefined>;
   getAvailabilities(): Promise<Availability[]>;
   getAvailabilitiesByDoctor(doctorId: number): Promise<Availability[]>;
-  updateAvailability(id: number, availability: Partial<Availability>): Promise<Availability>;
+  updateAvailability(id: number, update: Partial<Availability>): Promise<Availability>;
   deleteAvailability(id: number): Promise<void>;
 
   sessionStore: session.Store;
@@ -197,9 +197,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
+    // Assurez-vous que les dates sont au bon format
+    const formattedUpdate = {
+      ...update,
+      startTime: update.startTime ? new Date(update.startTime) : undefined,
+      endTime: update.endTime ? new Date(update.endTime) : undefined,
+    };
+
     const [avail] = await db
       .update(availabilityTable)
-      .set(update)
+      .set(formattedUpdate)
       .where(eq(availabilityTable.id, id))
       .returning();
     if (!avail) throw new Error("Availability not found");

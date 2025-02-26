@@ -3,7 +3,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
-import interactionPlugin, { EventDragStartArg, EventDropArg } from "@fullcalendar/interaction";
+import interactionPlugin from "@fullcalendar/interaction";
+import type { EventDropArg as FullCalendarEventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,29 +37,34 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
-      // Validation des dates
-      const startTime = new Date(data.startTime);
-      const endTime = new Date(data.endTime);
+      try {
+        // Validation des dates
+        const startTime = new Date(data.startTime);
+        const endTime = new Date(data.endTime);
 
-      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-        throw new Error("Dates invalides");
+        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+          throw new Error("Les dates sélectionnées ne sont pas valides");
+        }
+
+        if (startTime >= endTime) {
+          throw new Error("La date de début doit être antérieure à la date de fin");
+        }
+
+        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData?.error || "Erreur lors de la mise à jour");
+        }
+
+        return res.json();
+      } catch (error) {
+        console.error("Update availability error:", error);
+        throw error instanceof Error ? error : new Error("Erreur inconnue");
       }
-
-      if (startTime >= endTime) {
-        throw new Error("La date de début doit être antérieure à la date de fin");
-      }
-
-      const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || "Erreur lors de la mise à jour");
-      }
-
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
@@ -75,6 +81,81 @@ export function DoctorsSchedule() {
       });
     },
   });
+
+  // Formatage des événements pour le calendrier
+  const events = availabilities?.map(availability => {
+    const doctor = doctors?.find(d => d.id === availability.doctorId);
+    return {
+      id: availability.id.toString(),
+      title: doctor ? `${doctor.lastName} ${doctor.firstName}` : "Disponible",
+      start: availability.startTime,
+      end: availability.endTime,
+      backgroundColor: doctor?.color || '#22c55e',
+      extendedProps: {
+        isBooked: availability.isBooked,
+        doctorId: availability.doctorId,
+      }
+    };
+  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
+
+  const handleEventDrop = (info: FullCalendarEventDropArg) => {
+    try {
+      const eventId = parseInt(info.event.id);
+      const startTime = info.event.start;
+      const endTime = info.event.end;
+
+      if (!startTime || !endTime) {
+        info.revert();
+        toast({
+          title: "Erreur",
+          description: "Impossible de déplacer la plage horaire : dates invalides",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (startTime >= endTime) {
+        info.revert();
+        toast({
+          title: "Erreur",
+          description: "La date de début doit être antérieure à la date de fin",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Ajouter une classe visuelle pendant la mise à jour
+      const eventEl = info.el;
+      eventEl.style.opacity = "0.5";
+      eventEl.style.cursor = "wait";
+
+      updateAvailability.mutate(
+        {
+          id: eventId,
+          startTime,
+          endTime,
+        },
+        {
+          onSettled: () => {
+            // Restaurer l'apparence normale
+            eventEl.style.opacity = "";
+            eventEl.style.cursor = "";
+          },
+          onError: () => {
+            info.revert();
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error in handleEventDrop:", error);
+      info.revert();
+      toast({
+        title: "Erreur",
+        description: "Impossible de déplacer la plage horaire",
+        variant: "destructive",
+      });
+    }
+  };
 
   const deleteAvailability = useMutation({
     mutationFn: async (id: number) => {
@@ -111,21 +192,6 @@ export function DoctorsSchedule() {
     return `${doctor.lastName} ${doctor.firstName}`;
   };
 
-  // Convertir les disponibilités en événements pour FullCalendar
-  const events = availabilities?.map(availability => {
-    const doctor = doctors?.find(d => d.id === availability.doctorId);
-    return {
-      id: availability.id.toString(),
-      title: doctor ? formatDoctorName(doctor) : "Disponible",
-      start: availability.startTime,
-      end: availability.endTime,
-      backgroundColor: doctor?.color || '#22c55e',
-      extendedProps: {
-        isBooked: availability.isBooked,
-        doctorId: availability.doctorId,
-      }
-    };
-  }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
 
   const handleEventClick = (info: any) => {
     const event = {
@@ -136,41 +202,6 @@ export function DoctorsSchedule() {
       isBooked: info.event.extendedProps.isBooked,
     };
     setSelectedEvent(event);
-  };
-
-  const handleEventDrop = (info: EventDropArg) => {
-    try {
-      const eventId = parseInt(info.event.id);
-      const startTime = info.event.start;
-      const endTime = info.event.end;
-
-      if (!startTime || !endTime) {
-        throw new Error("Dates invalides");
-        info.revert();
-        return;
-      }
-
-      // Vérifier que la plage horaire est valide
-      if (startTime >= endTime) {
-        throw new Error("La plage horaire n'est pas valide");
-        info.revert();
-        return;
-      }
-
-      updateAvailability.mutate({
-        id: eventId,
-        startTime,
-        endTime,
-      });
-    } catch (error) {
-      console.error("Error in handleEventDrop:", error);
-      info.revert();
-      toast({
-        title: "Erreur",
-        description: "Impossible de déplacer la plage horaire",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -206,7 +237,7 @@ export function DoctorsSchedule() {
                 setSearchTerm("");
               }}
             >
-              {formatDoctorName(doctor)}
+              {doctor.lastName} {doctor.firstName}
             </Button>
           ))}
         </div>
@@ -216,11 +247,12 @@ export function DoctorsSchedule() {
         {`
           .fc-event {
             cursor: move !important;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.2s ease !important;
             border-radius: 4px !important;
             margin: 1px !important;
           }
           .fc-event:hover {
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           }
           .fc-event.fc-event-dragging {
@@ -280,7 +312,6 @@ export function DoctorsSchedule() {
           events={events}
           height="auto"
           slotDuration="00:15:00"
-          eventClick={handleEventClick}
           editable={true}
           eventDrop={handleEventDrop}
           dragScroll={true}
@@ -298,6 +329,12 @@ export function DoctorsSchedule() {
           slotEventOverlap={false}
           eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+            info.el.style.cursor = 'grab';
+          }}
+          eventDragStart={(info) => {
+            info.el.style.cursor = 'grabbing';
+          }}
+          eventDragStop={(info) => {
             info.el.style.cursor = 'grab';
           }}
         />
