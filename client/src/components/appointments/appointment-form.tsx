@@ -45,7 +45,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   const selectedPatientId = form.watch("patientId");
   const selectedPatient = patients?.find((p: any) => p.id === selectedPatientId);
 
-  // Filtrer les médecins selon la recherche
+
   const filteredDoctors = doctors?.filter((doctor: any) => {
     if (!doctorSearch.trim()) return true;
     const searchTerm = doctorSearch.toLowerCase().trim();
@@ -120,45 +120,51 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
             )}
 
             <FormField
-              control={form.control}
-              name="doctorId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Médecin</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un médecin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <div className="px-2 py-1.5">
+                control={form.control}
+                name="doctorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Médecin</FormLabel>
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           placeholder="Rechercher un médecin..."
                           value={doctorSearch}
                           onChange={(e) => setDoctorSearch(e.target.value)}
-                          className="mb-2"
+                          className="pr-8"
                         />
-                      </div>
-                      {filteredDoctors?.map((doctor: any) => (
-                        <SelectItem
-                          key={doctor.id}
-                          value={doctor.id.toString()}
-                          className="flex items-center gap-2"
-                        >
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: doctor.color }}
-                          />
-                          <span>{doctor.lastName} {doctor.firstName}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      </FormControl>
+                      <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                      {doctorSearch && filteredDoctors && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md">
+                          {filteredDoctors.filter((doctor: any) => {
+                            const search = doctorSearch.toLowerCase();
+                            const fullName = `${doctor.lastName} ${doctor.firstName}`.toLowerCase();
+                            const reverseName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+                            return fullName.includes(search) || reverseName.includes(search);
+                          }).map((doctor: any) => (
+                            <div
+                              key={doctor.id}
+                              className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
+                              onClick={() => {
+                                field.onChange(doctor.id);
+                                setDoctorSearch(`${doctor.lastName} ${doctor.firstName}`);
+                              }}
+                            >
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: doctor.color }}
+                              />
+                              <span>{doctor.lastName} {doctor.firstName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
             <FormField
               control={form.control}

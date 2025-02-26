@@ -201,7 +201,7 @@ export function DoctorsSchedule() {
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 1px !important;
+            margin: 2px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
           }
