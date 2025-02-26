@@ -46,9 +46,14 @@ export function RoleManager() {
     mutationFn: async (roleName: string) => {
       const res = await apiRequest("DELETE", `/api/admin/roles/${roleName}`);
       if (!res.ok) {
-        throw new Error("Erreur lors de la suppression du rôle");
+        const error = await res.text();
+        throw new Error(error);
       }
-      return res.json();
+      // Ne pas essayer de parser la réponse en JSON si elle est vide
+      if (res.headers.get("content-length") === "0") {
+        return null;
+      }
+      return res.json().catch(() => null);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
