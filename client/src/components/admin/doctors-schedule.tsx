@@ -22,12 +22,6 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import interactionPlugin from "@fullcalendar/interaction";
 
-// Fonction pour générer une couleur pastel aléatoire
-function generatePastelColor(): string {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 80%)`;
-}
-
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
@@ -36,10 +30,7 @@ export function DoctorsSchedule() {
 
   const { data: doctors, isLoading: isLoadingDoctors } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
-    select: (users) => users?.filter(u => u.role === "doctor").map(doctor => ({
-      ...doctor,
-      color: doctor.color || generatePastelColor()
-    })),
+    select: (users) => users?.filter(u => u.role === "doctor"),
   });
 
   const { data: availabilities } = useQuery<Availability[]>({
@@ -103,7 +94,6 @@ export function DoctorsSchedule() {
       return;
     }
 
-    // Animation minimale
     info.el.style.opacity = "0.5";
 
     updateAvailability.mutate(
@@ -211,33 +201,30 @@ export function DoctorsSchedule() {
           .fc-event {
             cursor: grab !important;
             border-radius: 4px !important;
-            margin: 1px !important;
-            z-index: 1;
+            transition: all 0.2s ease !important;
           }
-          .fc-event:hover {
-            z-index: 2 !important;
+          .fc-time-grid-event {
+            margin: 0 !important;
+            border-radius: 4px !important;
           }
-          .fc-event-main {
-            padding: 4px !important;
+          .fc .fc-timegrid-col-events {
+            margin: 0 5px !important;
+            gap: 2px !important;
           }
-          .fc-timegrid-event-harness {
-            margin: 0 2px !important;
+          .fc-timegrid-event {
+            margin: 0 !important;
+            border-radius: 4px !important;
+            padding: 2px !important;
+          }
+          .fc-timegrid-event:hover {
+            transform: scale(1.02);
+            z-index: 10 !important;
           }
           .fc-timegrid-slots td {
             height: 3em !important;
           }
-          .fc-timegrid-event {
-            min-height: 2em !important;
-            border-radius: 4px !important;
-            margin: 1px 0 !important;
-          }
           .fc-timegrid-event .fc-event-main {
             padding: 2px 4px !important;
-          }
-          .fc-timegrid-event:hover {
-            transform: scale(1.02);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
           }
           .fc-highlight {
             background: rgba(0, 120, 255, 0.1) !important;
