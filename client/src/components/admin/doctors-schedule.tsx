@@ -54,28 +54,6 @@ export function DoctorsSchedule() {
     },
   });
 
-  const deleteAvailability = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/availability/${id}`);
-      if (!res.ok) throw new Error("Erreur lors de la suppression");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
-      toast({
-        title: "Succès",
-        description: "La plage horaire a été supprimée",
-      });
-      setSelectedEvent(null);
-    },
-    onError: () => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la plage horaire",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleEventDrop = (info: EventDropArg) => {
     const eventId = parseInt(info.event.id);
     const startTime = info.event.start;
@@ -117,6 +95,7 @@ export function DoctorsSchedule() {
     });
   };
 
+  // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter(doctor => {
     const search = searchTerm.toLowerCase();
     if (!search) return true;
@@ -193,28 +172,24 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            margin: 0 !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            margin: 0 4px !important;
           }
           .fc-timegrid-event {
             border: none !important;
-            margin: 0 2px !important;
+            margin: 0 !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
           }
-          .fc-timegrid-now-indicator-line {
-            border-color: var(--destructive) !important;
-          }
-          .fc-timegrid-now-indicator-arrow {
-            border-color: var(--destructive) !important;
-            color: var(--destructive) !important;
-          }
           .fc-event-time {
             font-size: 0.875rem !important;
-            padding: 0 4px !important;
+            padding: 2px 4px !important;
           }
           .fc-event-title {
-            padding: 0 4px !important;
+            padding: 2px 4px !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -261,15 +236,7 @@ export function DoctorsSchedule() {
           slotEventOverlap={false}
           forceEventDuration={true}
           displayEventEnd={true}
-          eventConstraint={{
-            startTime: '08:00:00',
-            endTime: '20:00:00',
-            dows: [0, 1, 2, 3, 4, 5, 6]
-          }}
-          validRange={{
-            start: '2024-01-01',
-            end: '2026-12-31'
-          }}
+          slotDuration="00:15:00"
           slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',
@@ -306,19 +273,6 @@ export function DoctorsSchedule() {
           </DialogHeader>
 
           <div className="flex justify-end gap-2 mt-4">
-            {!selectedEvent?.isBooked && (
-              <Button
-                variant="destructive"
-                onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
-                disabled={deleteAvailability.isPending}
-              >
-                {deleteAvailability.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Supprimer"
-                )}
-              </Button>
-            )}
             <Button variant="outline" onClick={() => setSelectedEvent(null)}>
               Fermer
             </Button>

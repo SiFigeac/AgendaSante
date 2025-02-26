@@ -37,7 +37,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     resolver: zodResolver(insertAppointmentSchema),
     defaultValues: {
       startTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
-      endTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
+      endTime: format(new Date(selectedDate.getTime() + 30 * 60000), "yyyy-MM-dd'T'HH:mm"),
       status: "scheduled" as const,
     },
   });
@@ -46,12 +46,15 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   const selectedPatientId = form.watch("patientId");
   const currentPatient = patients?.find((p: any) => p.id === selectedPatientId);
 
+  // Obtenir le médecin sélectionné
+  const currentDoctor = doctors?.find((d: any) => d.id === selectedDoctor);
+
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
     const search = searchTerm.toLowerCase();
     if (!search) return true;
-    const lastName = doctor.lastName?.toLowerCase() || '';
-    const firstName = doctor.firstName?.toLowerCase() || '';
+    const lastName = (doctor.lastName || '').toLowerCase();
+    const firstName = (doctor.firstName || '').toLowerCase();
     return lastName.includes(search) || firstName.includes(search);
   });
 
@@ -127,8 +130,8 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="flex gap-4 justify-end">
-                    <div className="flex gap-2 items-center w-full">
+                  <div className="space-y-2">
+                    <div className="flex gap-2 items-center">
                       <Input
                         placeholder="Rechercher un médecin..."
                         value={searchTerm}
@@ -137,6 +140,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                       />
                       {selectedDoctor && (
                         <Button
+                          type="button"
                           variant="ghost"
                           onClick={() => {
                             setSelectedDoctor(null);
@@ -144,36 +148,37 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                             field.onChange(null);
                           }}
                         >
-                          Effacer
+                          ×
                         </Button>
                       )}
                     </div>
-                  </div>
 
-                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
-                    <div className="border rounded-md p-2 space-y-1 bg-card mt-2">
-                      {filteredDoctors.map(doctor => (
-                        <Button
-                          key={doctor.id}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            field.onChange(doctor.id);
-                            setSelectedDoctor(doctor.id);
-                            setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: doctor.color }}
-                            />
-                            {doctor.lastName} {doctor.firstName}
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                    {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                        {filteredDoctors.map((doctor: any) => (
+                          <Button
+                            key={doctor.id}
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start px-3 py-2 h-auto"
+                            onClick={() => {
+                              field.onChange(doctor.id);
+                              setSelectedDoctor(doctor.id);
+                              setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: doctor.color }}
+                              />
+                              <span>Dr. {doctor.lastName} {doctor.firstName}</span>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -228,9 +233,9 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                       {...field}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        // Mettre à jour automatiquement l'heure de fin (+1 heure)
+                        // Mettre à jour automatiquement l'heure de fin (+30 minutes)
                         const startDate = new Date(e.target.value);
-                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                        const endDate = new Date(startDate.getTime() + 30 * 60000);
                         form.setValue("endTime", format(endDate, "yyyy-MM-dd'T'HH:mm"));
                       }}
                     />
@@ -265,7 +270,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Notes additionnelles" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
