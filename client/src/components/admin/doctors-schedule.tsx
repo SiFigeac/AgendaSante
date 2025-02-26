@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { EventDropArg } from "@fullcalendar/core";
@@ -196,7 +196,6 @@ export function DoctorsSchedule() {
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 0 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
           }
@@ -205,21 +204,20 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            left: 0 !important;
-            right: 0 !important;
+            position: relative !important;
           }
           .fc-timegrid-event {
-            margin: 0 2% !important;
+            margin: 0 1px !important;
             border: none !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
           }
           .fc-v-event {
             border: none !important;
-          }
-          .fc-timegrid-event.fc-event-mirror {
-            opacity: 0.7 !important;
           }
           .fc-timegrid-slot {
             height: 3em !important;

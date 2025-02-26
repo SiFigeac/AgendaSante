@@ -50,8 +50,10 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   const filteredDoctors = doctors?.filter((doctor: any) => {
     const search = searchTerm.toLowerCase();
     if (!search) return true;
-    const lastName = (doctor.lastName || '').toLowerCase();
-    const firstName = (doctor.firstName || '').toLowerCase();
+
+    const lastName = doctor.lastName?.toLowerCase() || '';
+    const firstName = doctor.firstName?.toLowerCase() || '';
+
     return lastName.includes(search) || firstName.includes(search);
   });
 
@@ -150,7 +152,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                     </div>
                   </div>
 
-                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
+                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
                     <div className="border rounded-md p-2 space-y-1 bg-card mt-2">
                       {filteredDoctors.map(doctor => (
                         <Button
