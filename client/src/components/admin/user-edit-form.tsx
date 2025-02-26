@@ -38,7 +38,13 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
 
   const updateUser = useMutation({
     mutationFn: async (data) => {
-      const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
+      // Assurer que la couleur est envoyée uniquement pour les médecins
+      const updateData = {
+        ...data,
+        color: data.role === "doctor" ? data.color : null,
+      };
+
+      const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, updateData);
       if (!res.ok) {
         const error = await res.text();
         throw new Error(error);
@@ -156,11 +162,20 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                     <FormLabel>Couleur du planning</FormLabel>
                     <div className="flex items-center gap-4">
                       <FormControl>
-                        <Input {...field} type="color" className="w-24 h-12" />
+                        <Input 
+                          {...field} 
+                          type="color" 
+                          className="w-24 h-12"
+                          value={field.value || "#4B5563"}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            form.setValue("color", e.target.value);
+                          }}
+                        />
                       </FormControl>
                       <div 
                         className="w-12 h-12 rounded-full border-2"
-                        style={{ backgroundColor: field.value }}
+                        style={{ backgroundColor: field.value || "#4B5563" }}
                       />
                     </div>
                     <FormMessage />

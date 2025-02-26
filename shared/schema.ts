@@ -54,6 +54,8 @@ export const insertUserSchema = z.object({
   role: z.enum(["doctor", "staff", "admin"]),
   isAdmin: z.boolean().default(false),
   permissions: z.array(z.string()).default([]),
+  color: z.string().optional(),
+  isActive: z.boolean().default(true),
 });
 
 export const insertPatientSchema = createInsertSchema(patients);
