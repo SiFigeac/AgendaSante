@@ -156,12 +156,11 @@ export function DoctorsSchedule() {
             min-height: 150px !important;
           }
           .fc-timegrid-slot {
-            height: 3em !important;
+            height: 4em !important;
           }
           .availability-event {
             border-radius: 4px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-            margin: 1px !important;
             transition: all 0.2s ease !important;
           }
           .availability-event:hover {
@@ -169,17 +168,29 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
-            margin: 1px !important;
+            margin: 2px 0 !important;
+            position: relative !important;
+            min-height: 4em !important;
           }
           .fc-timegrid-event {
             border: none !important;
+            height: 100% !important;
           }
           .fc-timegrid-col-events {
             margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
-          .fc-event-time, .fc-event-title {
-            padding: 2px 4px !important;
+          .fc-event-time {
+            display: none !important;
+          }
+          .fc-event-title {
+            padding: 4px !important;
             font-size: 0.875rem !important;
+            white-space: normal !important;
+          }
+          .fc-timegrid-event.fc-event-mirror {
+            opacity: 0.7 !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -219,10 +230,10 @@ export function DoctorsSchedule() {
           eventDurationEditable={true}
           eventOverlap={true}
           nowIndicator={true}
-          slotEventOverlap={true}
+          slotEventOverlap={false}
           forceEventDuration={true}
-          displayEventEnd={true}
-          slotDuration="00:15:00"
+          displayEventEnd={false}
+          slotDuration="01:00:00"
           slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',
@@ -234,8 +245,7 @@ export function DoctorsSchedule() {
             hour12: false
           }}
           eventDidMount={(info) => {
-            const title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-            info.el.title = title;
+            info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
           }}
           eventClick={(info) => setSelectedEvent({
             id: parseInt(info.event.id),

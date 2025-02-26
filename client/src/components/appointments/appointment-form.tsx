@@ -33,7 +33,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   });
 
   const { data: doctors } = useQuery({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/admin/users"],  // Changed from "/api/users" to "/api/admin/users"
     select: (users) => users?.filter((u: any) => u.role === "doctor"),
   });
 
