@@ -62,7 +62,7 @@ export function DoctorsSchedule() {
           throw new Error(errorData.error || "Erreur lors de la mise à jour");
         }
 
-        return res.json();
+        return await res.json();
       } catch (error) {
         console.error("Update availability error:", error);
         throw error instanceof Error ? error : new Error("Erreur inconnue");
@@ -86,40 +86,39 @@ export function DoctorsSchedule() {
 
   const handleEventDrop = async (info: EventDropArg) => {
     const eventEl = info.el;
+
     try {
+      // Valider l'ID de l'événement
       const eventId = parseInt(info.event.id);
+      if (isNaN(eventId)) {
+        throw new Error("ID d'événement invalide");
+      }
+
+      // Valider les dates
       const startTime = info.event.start;
       const endTime = info.event.end;
 
-      // Validation initiale
       if (!startTime || !endTime) {
-        info.revert();
-        toast({
-          title: "Erreur",
-          description: "Dates invalides pour la plage horaire",
-          variant: "destructive",
-        });
-        return;
+        throw new Error("Dates invalides pour la plage horaire");
       }
 
       if (startTime >= endTime) {
-        info.revert();
-        toast({
-          title: "Erreur",
-          description: "La date de début doit être antérieure à la date de fin",
-          variant: "destructive",
-        });
-        return;
+        throw new Error("La date de début doit être antérieure à la date de fin");
       }
 
-      // Ajouter un retour visuel pendant la mise à jour
+      // Retour visuel pendant la mise à jour
       eventEl.style.opacity = "0.5";
       eventEl.style.cursor = "wait";
 
-      await updateAvailability.mutateAsync({
-        id: eventId,
-        startTime,
-        endTime,
+      // Tenter la mise à jour avec une promesse
+      await new Promise<void>((resolve, reject) => {
+        updateAvailability.mutate(
+          { id: eventId, startTime, endTime },
+          {
+            onSuccess: () => resolve(),
+            onError: (error) => reject(error),
+          }
+        );
       });
 
     } catch (error) {
@@ -132,33 +131,17 @@ export function DoctorsSchedule() {
       });
     } finally {
       // Restaurer l'apparence normale
-      eventEl.style.opacity = "";
-      eventEl.style.cursor = "";
+      if (eventEl) {
+        eventEl.style.opacity = "";
+        eventEl.style.cursor = "";
+      }
     }
   };
 
-  const deleteAvailability = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/availability/${id}`);
-      if (!res.ok) {
-        throw new Error("Erreur lors de la suppression");
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
-      toast({
-        title: "Succès",
-        description: "La plage horaire a été supprimée",
-      });
-      setSelectedEvent(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+  // Filtrer les médecins en fonction du terme de recherche
+  const filteredDoctors = doctors?.filter(doctor => {
+    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
   });
 
   // Formatage des événements pour le calendrier
@@ -176,12 +159,6 @@ export function DoctorsSchedule() {
       }
     };
   }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
-
-  // Filtrer les médecins en fonction du terme de recherche
-  const filteredDoctors = doctors?.filter(doctor => {
-    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  });
 
   const handleEventClick = (info: any) => {
     const event = {
@@ -349,19 +326,6 @@ export function DoctorsSchedule() {
             </DialogHeader>
 
             <div className="flex justify-end gap-2 mt-4">
-              {!selectedEvent?.isBooked && (
-                <Button
-                  variant="destructive"
-                  onClick={() => deleteAvailability.mutate(selectedEvent?.id)}
-                  disabled={deleteAvailability.isPending}
-                >
-                  {deleteAvailability.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Supprimer"
-                  )}
-                </Button>
-              )}
               <Button variant="outline" onClick={() => setSelectedEvent(null)}>
                 Fermer
               </Button>

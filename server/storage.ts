@@ -198,27 +198,45 @@ export class DatabaseStorage implements IStorage {
 
   async updateAvailability(id: number, update: Partial<Availability>): Promise<Availability> {
     try {
-      // Ensure dates are properly formatted as Date objects
-      const formattedUpdate = {
-        ...update,
-        startTime: update.startTime ? new Date(update.startTime) : undefined,
-        endTime: update.endTime ? new Date(update.endTime) : undefined,
-      };
+      // Vérifier si la disponibilité existe
+      const existing = await this.getAvailability(id);
+      if (!existing) {
+        throw new Error("Cette plage horaire n'existe pas");
+      }
 
-      // Validate dates
-      if (formattedUpdate.startTime && formattedUpdate.endTime &&
-          formattedUpdate.startTime >= formattedUpdate.endTime) {
+      // Formater et valider les dates
+      const startTime = update.startTime ? new Date(update.startTime) : existing.startTime;
+      const endTime = update.endTime ? new Date(update.endTime) : existing.endTime;
+
+      // Vérifier la validité des dates
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        throw new Error("Les dates fournies sont invalides");
+      }
+
+      // Vérifier que la date de début est avant la date de fin
+      if (startTime >= endTime) {
         throw new Error("La date de début doit être antérieure à la date de fin");
       }
 
-      const [avail] = await db
+      // Créer l'objet de mise à jour avec les dates validées
+      const formattedUpdate = {
+        ...update,
+        startTime,
+        endTime,
+      };
+
+      // Effectuer la mise à jour
+      const [updated] = await db
         .update(availabilityTable)
         .set(formattedUpdate)
         .where(eq(availabilityTable.id, id))
         .returning();
 
-      if (!avail) throw new Error("Cette plage horaire n'existe pas");
-      return avail;
+      if (!updated) {
+        throw new Error("Échec de la mise à jour de la plage horaire");
+      }
+
+      return updated;
     } catch (error) {
       console.error('Error in updateAvailability:', error);
       throw error instanceof Error ? error : new Error("Erreur inconnue lors de la mise à jour");

@@ -79,7 +79,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const availabilityId = parseInt(req.params.id);
       if (isNaN(availabilityId)) {
-        return res.status(400).json({ error: "ID de disponibilité invalide" });
+        return res.status(400).json({
+          error: "ID de disponibilité invalide"
+        });
       }
 
       // Validation des dates
@@ -87,32 +89,46 @@ export function registerRoutes(app: Express): Server {
       const endTime = new Date(req.body.endTime);
 
       if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-        return res.status(400).json({ error: "Dates invalides" });
+        return res.status(400).json({
+          error: "Les dates fournies sont invalides",
+          details: "Le format des dates n'est pas correct"
+        });
       }
 
       if (startTime >= endTime) {
         return res.status(400).json({
-          error: "La date de début doit être antérieure à la date de fin"
+          error: "La date de début doit être antérieure à la date de fin",
+          details: `Début: ${startTime.toISOString()}, Fin: ${endTime.toISOString()}`
         });
       }
 
-      // Vérifier si la disponibilité existe
-      const existing = await storage.getAvailability(availabilityId);
-      if (!existing) {
-        return res.status(404).json({
-          error: "Cette plage horaire n'existe pas"
-        });
-      }
-
+      // Tenter la mise à jour
       const availability = await storage.updateAvailability(availabilityId, {
-        ...req.body,
         startTime,
         endTime,
       });
 
+      // Retourner la disponibilité mise à jour
       res.json(availability);
+
     } catch (error) {
       console.error('Error updating availability:', error);
+
+      // Gestion spécifique des erreurs connues
+      if (error instanceof Error) {
+        if (error.message.includes("n'existe pas")) {
+          return res.status(404).json({
+            error: error.message
+          });
+        }
+        if (error.message.includes("date")) {
+          return res.status(400).json({
+            error: error.message
+          });
+        }
+      }
+
+      // Erreur par défaut
       res.status(500).json({
         error: "Erreur lors de la mise à jour de la disponibilité",
         details: error instanceof Error ? error.message : "Erreur inconnue"
