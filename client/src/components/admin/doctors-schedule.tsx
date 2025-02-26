@@ -1,17 +1,15 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { EventDropArg } from "@fullcalendar/core";
 import type { User, Availability } from "@shared/schema";
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
+  Dialog as BaseDialog,
+  DialogContent as BaseDialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  DialogHeader as BaseDialogHeader,
+  DialogTitle as BaseDialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
@@ -19,6 +17,9 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,8 +93,6 @@ export function DoctorsSchedule() {
       return;
     }
 
-    info.el.style.opacity = "0.5";
-
     updateAvailability.mutate(
       { id: eventId, startTime, endTime },
       {
@@ -136,8 +135,11 @@ export function DoctorsSchedule() {
   };
 
   const filteredDoctors = doctors?.filter(doctor => {
-    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
+    const search = searchTerm.toLowerCase();
+    if (!search) return true;
+    const lastName = (doctor.lastName || '').toLowerCase();
+    const firstName = (doctor.firstName || '').toLowerCase();
+    return lastName.includes(search) || firstName.includes(search);
   });
 
   if (!doctors) {
@@ -201,7 +203,7 @@ export function DoctorsSchedule() {
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 2px !important;
+            margin: 0 2px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
           }
@@ -209,28 +211,33 @@ export function DoctorsSchedule() {
             transform: scale(1.02);
             z-index: 5 !important;
           }
-          .fc-direction-ltr .fc-timegrid-slot-label {
-            text-align: center;
-          }
           .fc-timegrid-event-harness {
-            left: 0 !important;
-            right: 0 !important;
+            margin: 0 !important;
           }
           .fc-timegrid-event {
-            margin: 1px 2% !important;
+            margin: 0 1% !important;
             border: none !important;
+          }
+          .fc .fc-timegrid-slot {
+            height: 3em !important;
+          }
+          .fc .fc-timegrid-slot-label {
+            height: 3em !important;
+          }
+          .fc .fc-timegrid-slot-lane {
+            height: 3em !important;
+          }
+          .fc .fc-timegrid-col-events {
+            margin: 0 !important;
+          }
+          .fc-direction-ltr .fc-timegrid-col-events {
+            margin: 0 !important;
           }
           .fc-v-event {
             border: none !important;
           }
           .fc-timegrid-event.fc-event-mirror {
             opacity: 0.7 !important;
-          }
-          .fc-timegrid-slot {
-            height: 3em !important;
-          }
-          .fc-timegrid-col-events {
-            margin: 0 !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -272,9 +279,9 @@ export function DoctorsSchedule() {
           snapDuration="00:15:00"
           eventResizableFromStart={true}
           eventDurationEditable={true}
-          eventOverlap={true}
+          eventOverlap={false}
           nowIndicator={true}
-          slotEventOverlap={true}
+          slotEventOverlap={false}
           forceEventDuration={true}
           displayEventEnd={true}
           slotLabelFormat={{

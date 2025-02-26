@@ -10,7 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface AppointmentFormProps {
@@ -21,8 +21,8 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
   const { toast } = useToast();
-  const [doctorSearch, setDoctorSearch] = useState("");
-  const [showDoctorResults, setShowDoctorResults] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
@@ -48,7 +48,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
 
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
-    const search = doctorSearch.toLowerCase();
+    const search = searchTerm.toLowerCase();
     if (!search) return true;
     const lastName = (doctor.lastName || '').toLowerCase();
     const firstName = (doctor.firstName || '').toLowerCase();
@@ -127,40 +127,51 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="relative">
-                    <FormControl>
-                      <Input
-                        placeholder="Rechercher un médecin..."
-                        value={doctorSearch}
-                        onChange={(e) => {
-                          setDoctorSearch(e.target.value);
-                          setShowDoctorResults(true);
-                        }}
-                        onFocus={() => setShowDoctorResults(true)}
-                      />
-                    </FormControl>
-                    <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-
-                    {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-48 overflow-y-auto">
-                        {filteredDoctors.map((doctor: any) => (
-                          <div
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Rechercher un médecin..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full"
+                    />
+                    {searchTerm && filteredDoctors && filteredDoctors.length > 0 && !selectedDoctor && (
+                      <div className="border rounded-md p-2 space-y-1 bg-card">
+                        {filteredDoctors.map(doctor => (
+                          <Button
                             key={doctor.id}
-                            className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
                             onClick={() => {
                               field.onChange(doctor.id);
-                              setDoctorSearch(`${doctor.lastName} ${doctor.firstName}`);
-                              setShowDoctorResults(false);
+                              setSelectedDoctor(doctor.id);
+                              setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
                             }}
                           >
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: doctor.color }}
-                            />
-                            <span>{doctor.lastName} {doctor.firstName}</span>
-                          </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded-full"
+                                style={{ backgroundColor: doctor.color }}
+                              />
+                              {doctor.lastName} {doctor.firstName}
+                            </div>
+                          </Button>
                         ))}
                       </div>
+                    )}
+                    {selectedDoctor && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedDoctor(null);
+                          setSearchTerm("");
+                          field.onChange(null);
+                        }}
+                        className="text-sm"
+                      >
+                        Changer de médecin
+                      </Button>
                     )}
                   </div>
                   <FormMessage />
