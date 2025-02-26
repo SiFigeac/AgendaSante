@@ -62,7 +62,7 @@ export function DayPreviewDialog({
                       </div>
                       <Badge
                         variant={apt.extendedProps.status === 'confirmed' ? 'default' :
-                                apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
+                                 apt.extendedProps.status === 'cancelled' ? 'destructive' : 'secondary'}
                         className="capitalize"
                       >
                         {apt.extendedProps.status === 'confirmed' ? 'Confirmé' :
@@ -72,28 +72,24 @@ export function DayPreviewDialog({
                   </div>
 
                   <div className="p-3 space-y-3">
-                    {/* Motif de la consultation */}
-                    {apt.extendedProps.appointment.motif && (
-                      <div className="bg-primary/[0.08] rounded-md p-2.5">
-                        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-0.5">
-                          Motif
-                        </div>
-                        <div className="text-sm leading-relaxed">
-                          {apt.extendedProps.appointment.motif}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Horaire et type */}
+                    {/* Horaire, type et motif */}
                     <div className="text-sm flex items-center gap-2.5 flex-wrap">
                       <span className="font-medium whitespace-nowrap">
                         {format(new Date(apt.start), 'HH:mm')} - {format(new Date(apt.end), 'HH:mm')}
                       </span>
                       <span className="text-muted-foreground/70">•</span>
-                      <span className="capitalize whitespace-nowrap">
+                      <span className="capitalize whitespace-nowrap text-muted-foreground">
                         {apt.extendedProps.type === 'consultation' ? 'Consultation' :
                          apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
                       </span>
+                      {apt.extendedProps.appointment.motif && (
+                        <>
+                          <span className="text-muted-foreground/70">•</span>
+                          <span className="font-medium truncate max-w-[250px]">
+                            {apt.extendedProps.appointment.motif}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     {/* Médecin */}

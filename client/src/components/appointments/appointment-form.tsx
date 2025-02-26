@@ -49,15 +49,19 @@ export function AppointmentForm({
       startTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(new Date(selectedDate.getTime() + 30 * 60000), "yyyy-MM-dd'T'HH:mm"),
       status: "scheduled" as const,
-      doctorId: preselectedDoctorId,
+      doctorId: preselectedDoctorId || undefined,
+      type: undefined, 
+      patientId: undefined, 
+      motif: "",
+      notes: "",
     },
   });
 
-  // Obtenir le patient sélectionné
+  // Get the selected patient
   const selectedPatientId = form.watch("patientId");
   const currentPatient = patients?.find((p: any) => p.id === selectedPatientId);
 
-  // Filtrer les médecins selon la recherche
+  // Filter doctors based on search
   const filteredDoctors = doctors?.filter((doctor: any) => {
     if (!searchValue) return true;
     const search = searchValue.toLowerCase();
@@ -67,8 +71,9 @@ export function AppointmentForm({
   });
 
   const createAppointment = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/appointments", data);
+      if (!res.ok) throw new Error("Failed to create appointment");
       return res.json();
     },
     onSuccess: () => {
@@ -107,7 +112,10 @@ export function AppointmentForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Patient</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                  <Select
+                    value={field.value?.toString()}
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez un patient" />
@@ -115,7 +123,10 @@ export function AppointmentForm({
                     </FormControl>
                     <SelectContent>
                       {patients?.map((patient: any) => (
-                        <SelectItem key={patient.id} value={patient.id.toString()}>
+                        <SelectItem 
+                          key={patient.id} 
+                          value={patient.id.toString()}
+                        >
                           {patient.firstName} {patient.lastName}
                         </SelectItem>
                       ))}
@@ -204,7 +215,10 @@ export function AppointmentForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez le type" />
@@ -247,7 +261,7 @@ export function AppointmentForm({
                       {...field}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        // Mettre à jour automatiquement l'heure de fin (+30 minutes)
+                        // Update end time automatically (+30 minutes)
                         const startDate = new Date(e.target.value);
                         const endDate = new Date(startDate.getTime() + 30 * 60000);
                         form.setValue("endTime", format(endDate, "yyyy-MM-dd'T'HH:mm"));
@@ -269,7 +283,6 @@ export function AppointmentForm({
                     <Input
                       type="datetime-local"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
