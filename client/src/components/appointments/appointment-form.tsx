@@ -42,14 +42,16 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
     },
   });
 
+  // Obtenir le patient sélectionné
+  const selectedPatientId = form.watch("patientId");
+  const currentPatient = patients?.find((p: any) => p.id === selectedPatientId);
+
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
     const search = doctorSearch.toLowerCase();
     if (!search) return true;
-
     const lastName = (doctor.lastName || '').toLowerCase();
     const firstName = (doctor.firstName || '').toLowerCase();
-
     return lastName.includes(search) || firstName.includes(search);
   });
 
@@ -113,9 +115,9 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
               )}
             />
 
-            {selectedPatient && (
+            {currentPatient && (
               <div className="text-sm text-muted-foreground">
-                Date de naissance : {format(new Date(selectedPatient.dateOfBirth), 'dd/MM/yyyy')}
+                Date de naissance : {format(new Date(currentPatient.dateOfBirth), 'dd/MM/yyyy')}
               </div>
             )}
 

@@ -204,37 +204,33 @@ export function DoctorsSchedule() {
             margin: 2px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
-            opacity: 0.9 !important;
           }
           .availability-event:hover {
             transform: scale(1.02);
             z-index: 5 !important;
-            opacity: 1 !important;
+          }
+          .fc-direction-ltr .fc-timegrid-slot-label {
+            text-align: center;
           }
           .fc-timegrid-event-harness {
-            margin: 0 1% !important;
+            left: 0 !important;
+            right: 0 !important;
           }
           .fc-timegrid-event {
+            margin: 1px 2% !important;
             border: none !important;
           }
-          .fc .fc-timegrid-slot {
-            height: 3em !important;
-          }
-          .fc .fc-timegrid-slot-lane {
-            border-bottom: 1px solid var(--border) !important;
-          }
-          .fc .fc-timegrid-col-events {
-            margin: 0 !important;
-            position: relative !important;
-          }
-          .fc-direction-ltr .fc-timegrid-col-events {
-            margin: 0 1% !important;
+          .fc-v-event {
+            border: none !important;
           }
           .fc-timegrid-event.fc-event-mirror {
             opacity: 0.7 !important;
           }
-          .fc-v-event {
-            border: none !important;
+          .fc-timegrid-slot {
+            height: 3em !important;
+          }
+          .fc-timegrid-col-events {
+            margin: 0 !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -281,12 +277,12 @@ export function DoctorsSchedule() {
           slotEventOverlap={true}
           forceEventDuration={true}
           displayEventEnd={true}
-          eventTimeFormat={{
+          slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
           }}
-          slotLabelFormat={{
+          eventTimeFormat={{
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
