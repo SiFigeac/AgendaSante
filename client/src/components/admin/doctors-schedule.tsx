@@ -36,8 +36,13 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
+      // Validation des dates
       const startTime = new Date(data.startTime);
       const endTime = new Date(data.endTime);
+
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        throw new Error("Dates invalides");
+      }
 
       if (startTime >= endTime) {
         throw new Error("La date de début doit être antérieure à la date de fin");
@@ -49,8 +54,8 @@ export function DoctorsSchedule() {
       });
 
       if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error);
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "Erreur lors de la mise à jour");
       }
 
       return res.json();
@@ -59,7 +64,7 @@ export function DoctorsSchedule() {
       queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
       toast({
         title: "Succès",
-        description: "La plage horaire a été déplacée",
+        description: "La plage horaire a été mise à jour",
       });
     },
     onError: (error: Error) => {
@@ -141,6 +146,15 @@ export function DoctorsSchedule() {
 
       if (!startTime || !endTime) {
         throw new Error("Dates invalides");
+        info.revert();
+        return;
+      }
+
+      // Vérifier que la plage horaire est valide
+      if (startTime >= endTime) {
+        throw new Error("La plage horaire n'est pas valide");
+        info.revert();
+        return;
       }
 
       updateAvailability.mutate({
@@ -151,6 +165,11 @@ export function DoctorsSchedule() {
     } catch (error) {
       console.error("Error in handleEventDrop:", error);
       info.revert();
+      toast({
+        title: "Erreur",
+        description: "Impossible de déplacer la plage horaire",
+        variant: "destructive",
+      });
     }
   };
 

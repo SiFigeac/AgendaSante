@@ -150,11 +150,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/availability/:id", isAdmin, async (req, res) => {
     try {
       const availabilityId = parseInt(req.params.id);
-      const availability = await storage.updateAvailability(availabilityId, req.body);
+      if (isNaN(availabilityId)) {
+        return res.status(400).json({ error: "ID de disponibilité invalide" });
+      }
+
+      // Validation des dates
+      const startTime = new Date(req.body.startTime);
+      const endTime = new Date(req.body.endTime);
+
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        return res.status(400).json({ error: "Dates invalides" });
+      }
+
+      if (startTime >= endTime) {
+        return res.status(400).json({
+          error: "La date de début doit être antérieure à la date de fin"
+        });
+      }
+
+      // Vérifier si la disponibilité existe
+      const existing = await storage.getAvailability(availabilityId);
+      if (!existing) {
+        return res.status(404).json({
+          error: "Cette plage horaire n'existe pas"
+        });
+      }
+
+      const availability = await storage.updateAvailability(availabilityId, {
+        ...req.body,
+        startTime,
+        endTime,
+      });
+
       res.json(availability);
     } catch (error) {
       console.error('Error updating availability:', error);
-      res.status(500).json({ error: "Erreur lors de la mise à jour de la disponibilité" });
+      res.status(500).json({
+        error: "Erreur lors de la mise à jour de la disponibilité",
+        details: error instanceof Error ? error.message : "Erreur inconnue"
+      });
     }
   });
 
