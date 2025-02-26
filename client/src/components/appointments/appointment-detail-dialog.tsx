@@ -10,8 +10,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 interface AppointmentDetailDialogProps {
   open: boolean;
@@ -25,15 +29,15 @@ export function AppointmentDetailDialog({
   appointment,
 }: AppointmentDetailDialogProps) {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(appointment.doctorId);
+  const [openCombobox, setOpenCombobox] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
   });
 
   const { data: doctors } = useQuery({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/admin/users"],
     select: (users) => users?.filter((u: any) => u.role === "doctor"),
   });
 
@@ -45,15 +49,12 @@ export function AppointmentDetailDialog({
 
   // Filtrer les médecins selon la recherche
   const filteredDoctors = doctors?.filter((doctor: any) => {
-    const search = searchTerm.toLowerCase();
-    if (!search) return true;
+    if (!searchValue) return true;
+    const search = searchValue.toLowerCase();
     const lastName = (doctor.lastName || '').toLowerCase();
     const firstName = (doctor.firstName || '').toLowerCase();
     return lastName.includes(search) || firstName.includes(search);
   });
-
-  // Trouver le médecin actuel
-  const currentDoctor = doctors?.find(d => d.id === selectedDoctor);
 
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
@@ -144,53 +145,61 @@ export function AppointmentDetailDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Médecin</FormLabel>
-                  <div className="flex gap-4 justify-end">
-                    <div className="flex gap-2 items-center w-full">
-                      <Input
-                        placeholder="Rechercher un médecin..."
-                        value={searchTerm || (currentDoctor ? `${currentDoctor.lastName} ${currentDoctor.firstName}` : '')}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full"
-                      />
-                      {selectedDoctor && (
+                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
                         <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedDoctor(null);
-                            setSearchTerm("");
-                            field.onChange(null);
-                          }}
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCombobox}
+                          className="w-full justify-between"
                         >
-                          Effacer
+                          {field.value
+                            ? doctors?.find((doctor) => doctor.id === field.value)?.lastName + " " +
+                              doctors?.find((doctor) => doctor.id === field.value)?.firstName
+                            : "Sélectionnez un médecin"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {searchTerm && filteredDoctors && filteredDoctors.length > 0 && (
-                    <div className="border rounded-md p-2 space-y-1 bg-card mt-2">
-                      {filteredDoctors.map(doctor => (
-                        <Button
-                          key={doctor.id}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            field.onChange(doctor.id);
-                            setSelectedDoctor(doctor.id);
-                            setSearchTerm(`${doctor.lastName} ${doctor.firstName}`);
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: doctor.color }}
-                            />
-                            {doctor.lastName} {doctor.firstName}
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Rechercher un médecin..."
+                          value={searchValue}
+                          onValueChange={setSearchValue}
+                        />
+                        <CommandEmpty>Aucun médecin trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredDoctors?.map((doctor) => (
+                            <CommandItem
+                              key={doctor.id}
+                              value={`${doctor.lastName} ${doctor.firstName}`}
+                              onSelect={() => {
+                                field.onChange(doctor.id);
+                                setOpenCombobox(false);
+                                setSearchValue("");
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: doctor.color }}
+                                />
+                                <span>Dr. {doctor.lastName} {doctor.firstName}</span>
+                              </div>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  field.value === doctor.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

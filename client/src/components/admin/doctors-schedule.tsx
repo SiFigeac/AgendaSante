@@ -168,9 +168,10 @@ export function DoctorsSchedule() {
             z-index: 5 !important;
           }
           .fc-timegrid-event-harness {
+            width: 95% !important;
+            left: 2.5% !important;
             margin: 2px 0 !important;
             position: relative !important;
-            min-height: 4em !important;
           }
           .fc-timegrid-event {
             border: none !important;
@@ -189,8 +190,8 @@ export function DoctorsSchedule() {
             font-size: 0.875rem !important;
             white-space: normal !important;
           }
-          .fc-timegrid-event.fc-event-mirror {
-            opacity: 0.7 !important;
+          .fc-v-event {
+            border: none !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
