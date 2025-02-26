@@ -69,6 +69,28 @@ export function DoctorsSchedule() {
     },
   });
 
+  const deleteAvailability = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/availability/${id}`);
+      if (!res.ok) throw new Error("Erreur lors de la suppression");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
+      toast({
+        title: "Succès",
+        description: "La plage horaire a été supprimée",
+      });
+      setSelectedEvent(null);
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la plage horaire",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEventDrop = (info: EventDropArg) => {
     const eventId = parseInt(info.event.id);
     const startTime = info.event.start;
@@ -128,7 +150,7 @@ export function DoctorsSchedule() {
         extendedProps: {
           type: 'appointment',
           doctorId: appointment.doctorId,
-          patientName: appointment.patient?.firstName + ' ' + appointment.patient?.lastName, // Added patient name
+          patientName: appointment.patientName || 'Non spécifié',
         }
       };
     }) || [])
@@ -352,7 +374,7 @@ export function DoctorsSchedule() {
             const type = info.event.extendedProps.type;
             const title = type === 'availability'
               ? `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`
-              : `${info.event.title}\nPatient: ${info.event.extendedProps.patientName || 'Non spécifié'}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
+              : `${info.event.title}\nPatient: ${info.event.extendedProps.patientName}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
             info.el.title = title;
           }}
           eventClick={handleEventClick}
