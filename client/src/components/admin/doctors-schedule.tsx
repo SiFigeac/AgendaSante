@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
 
 export function DoctorsSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,25 +36,12 @@ export function DoctorsSchedule() {
 
   const updateAvailability = useMutation({
     mutationFn: async (data: { id: number, startTime: Date, endTime: Date }) => {
-      try {
-        console.log("Updating availability with data:", data);
-
-        const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
-          startTime: data.startTime.toISOString(),
-          endTime: data.endTime.toISOString(),
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Update availability error response:", errorData);
-          throw new Error(errorData.error || "Erreur lors de la mise à jour");
-        }
-
-        return await res.json();
-      } catch (error) {
-        console.error("Update availability error:", error);
-        throw error instanceof Error ? error : new Error("Erreur inconnue");
-      }
+      const res = await apiRequest("PATCH", `/api/availability/${data.id}`, {
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
+      });
+      if (!res.ok) throw new Error("Erreur lors de la mise à jour");
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/availability"] });
@@ -64,68 +50,40 @@ export function DoctorsSchedule() {
         description: "La plage horaire a été mise à jour",
       });
     },
-    onError: (error: Error) => {
-      console.error("Mutation error:", error);
+    onError: () => {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: "Impossible de mettre à jour la plage horaire",
         variant: "destructive",
       });
     },
   });
 
-  const handleEventDrop = async (info: EventDropArg) => {
-    const eventEl = info.el;
+  const handleEventDrop = (info: EventDropArg) => {
+    const eventId = parseInt(info.event.id);
+    const startTime = info.event.start;
+    const endTime = info.event.end;
 
-    try {
-      console.log("Event drop - Start handling drop event");
-
-      const eventId = parseInt(info.event.id);
-      if (isNaN(eventId)) {
-        throw new Error("ID d'événement invalide");
-      }
-
-      const startTime = info.event.start;
-      const endTime = info.event.end;
-
-      if (!startTime || !endTime) {
-        throw new Error("Dates invalides pour la plage horaire");
-      }
-
-      console.log("Event drop - Dates:", { startTime, endTime });
-
-      // Retour visuel pendant la mise à jour
-      eventEl.style.opacity = "0.5";
-      eventEl.style.cursor = "wait";
-
-      // Utiliser mutateAsync pour une meilleure gestion des erreurs
-      await updateAvailability.mutateAsync({
-        id: eventId,
-        startTime,
-        endTime,
-      });
-
-    } catch (error) {
-      console.error("Error in handleEventDrop:", error);
+    if (!startTime || !endTime) {
       info.revert();
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Erreur lors du déplacement",
-        variant: "destructive",
-      });
-    } finally {
-      if (eventEl) {
-        eventEl.style.opacity = "";
-        eventEl.style.cursor = "";
-      }
+      return;
     }
-  };
 
-  // Filtrer les médecins en fonction du terme de recherche
-  const filteredDoctors = doctors?.filter(doctor => {
-    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  });
+    // Animation minimale
+    info.el.style.opacity = "0.5";
+
+    updateAvailability.mutate(
+      { id: eventId, startTime, endTime },
+      {
+        onSettled: () => {
+          info.el.style.opacity = "";
+        },
+        onError: () => {
+          info.revert();
+        }
+      }
+    );
+  };
 
   // Formatage des événements pour le calendrier
   const events = availabilities?.map(availability => {
@@ -144,15 +102,20 @@ export function DoctorsSchedule() {
   }).filter(event => !selectedDoctor || event.extendedProps.doctorId === selectedDoctor);
 
   const handleEventClick = (info: any) => {
-    const event = {
+    setSelectedEvent({
       id: parseInt(info.event.id),
       title: info.event.title,
       start: info.event.start,
       end: info.event.end,
       isBooked: info.event.extendedProps.isBooked,
-    };
-    setSelectedEvent(event);
+    });
   };
+
+  // Filtrer les médecins en fonction du terme de recherche
+  const filteredDoctors = doctors?.filter(doctor => {
+    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="space-y-4">
@@ -196,20 +159,9 @@ export function DoctorsSchedule() {
       <style>
         {`
           .fc-event {
-            cursor: move !important;
-            transition: all 0.2s ease !important;
+            cursor: grab !important;
             border-radius: 4px !important;
             margin: 1px !important;
-          }
-          .fc-event:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          }
-          .fc-event.fc-event-dragging {
-            transform: scale(1.02);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            opacity: 0.8;
-            z-index: 9999;
           }
           .fc-event-main {
             padding: 4px !important;
@@ -219,29 +171,10 @@ export function DoctorsSchedule() {
           }
           .fc-timegrid-slots td {
             height: 3em !important;
-            transition: background-color 0.2s;
           }
           .fc-highlight {
             background: rgba(0, 120, 255, 0.1) !important;
             border: 2px dashed rgba(0, 120, 255, 0.4) !important;
-          }
-          .fc-day {
-            transition: background-color 0.2s !important;
-          }
-          .fc-day.fc-day-today {
-            background-color: rgba(0, 120, 255, 0.05) !important;
-          }
-          .fc-timegrid-col {
-            transition: all 0.2s ease-in-out;
-          }
-          .fc-timegrid-col.drop-highlight {
-            background-color: rgba(59, 130, 246, 0.1);
-          }
-          .fc-timegrid-col.drop-valid {
-            background-color: rgba(34, 197, 94, 0.1);
-          }
-          .fc-timegrid-col.drop-invalid {
-            background-color: rgba(239, 68, 68, 0.1);
           }
         `}
       </style>
@@ -274,17 +207,6 @@ export function DoctorsSchedule() {
           slotEventOverlap={false}
           eventDidMount={(info) => {
             info.el.title = `${info.event.title}\nDébut: ${new Date(info.event.start!).toLocaleTimeString('fr-FR')}\nFin: ${new Date(info.event.end!).toLocaleTimeString('fr-FR')}`;
-            info.el.style.cursor = 'grab';
-          }}
-          eventDragStart={(info) => {
-            console.log("Event drag start");
-            info.el.style.cursor = 'grabbing';
-            info.el.style.opacity = '0.7';
-          }}
-          eventDragStop={(info) => {
-            console.log("Event drag stop");
-            info.el.style.cursor = 'grab';
-            info.el.style.opacity = '';
           }}
           eventClick={handleEventClick}
         />
