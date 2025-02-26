@@ -77,15 +77,20 @@ export function DayPreviewDialog({
                         `Dr. ${apt.extendedProps.doctor.lastName} ${apt.extendedProps.doctor.firstName}` : 
                         'Médecin non assigné'}
                     </div>
-                    <div className="mt-1">
-                      Type : {apt.extendedProps.type === 'consultation' ? 'Consultation' :
-                             apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span>
+                        Type : {apt.extendedProps.type === 'consultation' ? 'Consultation' :
+                               apt.extendedProps.type === 'follow-up' ? 'Suivi' : 'Urgence'}
+                      </span>
+                      {apt.extendedProps.appointment.motif && (
+                        <>
+                          <span className="mx-2">•</span>
+                          <span>
+                            Motif : {apt.extendedProps.appointment.motif}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    {apt.extendedProps.appointment.motif && (
-                      <div className="mt-1 font-medium">
-                        Motif : {apt.extendedProps.appointment.motif}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))
