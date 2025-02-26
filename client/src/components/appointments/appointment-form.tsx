@@ -132,25 +132,33 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                           placeholder="Rechercher un médecin..."
                           value={doctorSearch}
                           onChange={(e) => {
-                            setDoctorSearch(e.target.value);
-                            setShowDoctorResults(true);
+                            const value = e.target.value;
+                            setDoctorSearch(value);
+                            if (value) {
+                              setShowDoctorResults(true);
+                            }
                           }}
                           onFocus={() => setShowDoctorResults(true)}
+                          onBlur={() => {
+                            // Délai pour permettre le clic sur les résultats
+                            setTimeout(() => setShowDoctorResults(false), 200);
+                          }}
                         />
                       </FormControl>
                       <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     </div>
                     {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
+                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md max-h-[200px] overflow-y-auto">
                         {filteredDoctors.map((doctor: any) => (
                           <div
                             key={doctor.id}
                             className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
                             onClick={() => {
                               field.onChange(doctor.id);
-                              setDoctorSearch(`${doctor.firstName} ${doctor.lastName}`);
+                              setDoctorSearch(`${doctor.lastName} ${doctor.firstName}`);
                               setShowDoctorResults(false);
                             }}
+                            onMouseDown={(e) => e.preventDefault()} // Empêche le onBlur de se déclencher trop tôt
                           >
                             <div
                               className="w-3 h-3 rounded-full"
@@ -211,8 +219,8 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                 <FormItem>
                   <FormLabel>Date et heure du rendez-vous</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="datetime-local" 
+                    <Input
+                      type="datetime-local"
                       {...field}
                       onChange={(e) => {
                         field.onChange(e.target.value);
@@ -235,8 +243,8 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
                 <FormItem>
                   <FormLabel>Date et heure de fin du rendez-vous</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="datetime-local" 
+                    <Input
+                      type="datetime-local"
                       {...field}
                       onChange={(e) => field.onChange(e.target.value)}
                     />

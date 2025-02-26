@@ -9,11 +9,9 @@ import { insertAppointmentSchema, type Appointment } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format, addHours } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { format } from "date-fns";
+import { Loader2, Search } from "lucide-react";
+import { useState } from "react";
 
 interface AppointmentDetailDialogProps {
   open: boolean;
@@ -27,10 +25,16 @@ export function AppointmentDetailDialog({
   appointment,
 }: AppointmentDetailDialogProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [showDoctorResults, setShowDoctorResults] = useState(false);
 
   const { data: patients } = useQuery({
     queryKey: ["/api/patients"],
+  });
+
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/users"],
+    select: (users) => users?.filter((u: any) => u.role === "doctor"),
   });
 
   // Trouver le patient actuel
@@ -38,6 +42,17 @@ export function AppointmentDetailDialog({
   const patientName = currentPatient 
     ? `${currentPatient.firstName} ${currentPatient.lastName}`
     : 'Patient inconnu';
+
+  // Filtrer les médecins selon la recherche
+  const filteredDoctors = doctors?.filter((doctor: any) => {
+    if (!doctorSearch) return true;
+    const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase();
+    return fullName.includes(doctorSearch.toLowerCase());
+  });
+
+  // Trouver le médecin actuel
+  const currentDoctor = doctors?.find(d => d.id === appointment.doctorId);
+  const [selectedDoctor, setSelectedDoctor] = useState(currentDoctor);
 
   const form = useForm({
     resolver: zodResolver(insertAppointmentSchema),
@@ -51,16 +66,6 @@ export function AppointmentDetailDialog({
       notes: appointment.notes || "",
     },
   });
-
-  // Mettre à jour la date de fin quand la date de début change
-  const startTime = form.watch("startTime");
-  useEffect(() => {
-    if (startTime) {
-      const startDate = new Date(startTime);
-      const endDate = addHours(startDate, 1); // Par défaut, ajoute 1 heure
-      form.setValue("endTime", format(endDate, "yyyy-MM-dd'T'HH:mm"));
-    }
-  }, [startTime, form]);
 
   const updateAppointment = useMutation({
     mutationFn: async (data) => {
@@ -132,6 +137,55 @@ export function AppointmentDetailDialog({
             onSubmit={form.handleSubmit((data) => updateAppointment.mutate(data))}
             className="space-y-4"
           >
+            <FormField
+              control={form.control}
+              name="doctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Médecin</FormLabel>
+                  <div className="relative">
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          placeholder="Rechercher un médecin..."
+                          value={doctorSearch || (selectedDoctor ? `${selectedDoctor.firstName} ${selectedDoctor.lastName}` : '')}
+                          onChange={(e) => {
+                            setDoctorSearch(e.target.value);
+                            setShowDoctorResults(true);
+                          }}
+                          onFocus={() => setShowDoctorResults(true)}
+                        />
+                      </FormControl>
+                      <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                    </div>
+                    {showDoctorResults && filteredDoctors && filteredDoctors.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
+                        {filteredDoctors.map((doctor: any) => (
+                          <div
+                            key={doctor.id}
+                            className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                              field.onChange(doctor.id);
+                              setSelectedDoctor(doctor);
+                              setDoctorSearch("");
+                              setShowDoctorResults(false);
+                            }}
+                          >
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: doctor.color }}
+                            />
+                            <span>{doctor.lastName} {doctor.firstName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="type"

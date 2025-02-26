@@ -204,10 +204,12 @@ export function DoctorsSchedule() {
             margin: 1px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
             transition: all 0.2s ease !important;
+            opacity: 0.9 !important;
           }
           .availability-event:hover {
             transform: scale(1.02);
             z-index: 5 !important;
+            opacity: 1 !important;
           }
           .fc-timegrid-event-harness {
             margin: 0 !important;
@@ -227,9 +229,13 @@ export function DoctorsSchedule() {
           }
           .fc .fc-timegrid-col-events {
             margin: 0 !important;
+            position: relative !important;
           }
           .fc-direction-ltr .fc-timegrid-col-events {
             margin: 0 1% !important;
+          }
+          .fc-timegrid-event.fc-event-mirror {
+            opacity: 0.7 !important;
           }
           @media (max-width: 640px) {
             .fc .fc-toolbar {
@@ -244,6 +250,10 @@ export function DoctorsSchedule() {
             }
             .fc-timegrid-event .fc-event-main {
               font-size: 0.75rem !important;
+              padding: 2px !important;
+            }
+            .fc-timegrid-event {
+              margin: 0 !important;
             }
           }
         `}
