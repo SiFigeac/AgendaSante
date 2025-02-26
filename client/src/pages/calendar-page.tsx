@@ -6,10 +6,12 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { AppointmentCalendar } from "@/components/calendar/full-calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showAddAppointment, setShowAddAppointment] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
 
   const { data: appointments } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
@@ -53,6 +55,11 @@ export default function CalendarPage() {
     };
   }) || [];
 
+  // Filtrer les rendez-vous selon le médecin sélectionné
+  const filteredAppointments = selectedDoctorId
+    ? formattedAppointments.filter(apt => apt.extendedProps.doctor?.id.toString() === selectedDoctorId)
+    : formattedAppointments;
+
   return (
     <div className="flex h-screen">
       <aside className="w-64 border-r">
@@ -61,10 +68,28 @@ export default function CalendarPage() {
       <main className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Calendrier</h1>
-          <Button onClick={() => setShowAddAppointment(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau rendez-vous
-          </Button>
+          <div className="flex items-center gap-4">
+            <Select
+              value={selectedDoctorId || ""}
+              onValueChange={(value) => setSelectedDoctorId(value || null)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tous les médecins" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tous les médecins</SelectItem>
+                {doctors?.map((doctor) => (
+                  <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                    Dr. {doctor.lastName} {doctor.firstName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => setShowAddAppointment(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau rendez-vous
+            </Button>
+          </div>
         </div>
 
         <style>
@@ -74,10 +99,10 @@ export default function CalendarPage() {
               min-height: 700px;
             }
             .fc-timegrid-slot {
-              height: 6em !important;
+              height: 3.3em !important;
             }
             .fc-timegrid-slot-lane {
-              height: 6em !important;
+              height: 3.3em !important;
             }
             .fc-timegrid-event-harness {
               margin: 2px 0 !important;
@@ -106,9 +131,10 @@ export default function CalendarPage() {
         <div className="rounded-md border p-4">
           {appointments && patients && doctors && (
             <AppointmentCalendar
-              appointments={formattedAppointments}
+              appointments={filteredAppointments}
               patients={patients}
               onDateSelect={handleDateSelect}
+              selectedDoctorId={selectedDoctorId}
             />
           )}
         </div>
@@ -117,6 +143,7 @@ export default function CalendarPage() {
           open={showAddAppointment}
           onOpenChange={setShowAddAppointment}
           selectedDate={selectedDate}
+          preselectedDoctorId={selectedDoctorId ? parseInt(selectedDoctorId) : undefined}
         />
       </main>
     </div>

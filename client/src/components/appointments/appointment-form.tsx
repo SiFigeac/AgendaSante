@@ -21,9 +21,15 @@ interface AppointmentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate: Date;
+  preselectedDoctorId?: number;
 }
 
-export function AppointmentForm({ open, onOpenChange, selectedDate }: AppointmentFormProps) {
+export function AppointmentForm({ 
+  open, 
+  onOpenChange, 
+  selectedDate,
+  preselectedDoctorId 
+}: AppointmentFormProps) {
   const { toast } = useToast();
   const [openCombobox, setOpenCombobox] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -33,7 +39,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
   });
 
   const { data: doctors } = useQuery({
-    queryKey: ["/api/admin/users"],  // Changed from "/api/users" to "/api/admin/users"
+    queryKey: ["/api/admin/users"],
     select: (users) => users?.filter((u: any) => u.role === "doctor"),
   });
 
@@ -43,6 +49,7 @@ export function AppointmentForm({ open, onOpenChange, selectedDate }: Appointmen
       startTime: format(selectedDate, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(new Date(selectedDate.getTime() + 30 * 60000), "yyyy-MM-dd'T'HH:mm"),
       status: "scheduled" as const,
+      doctorId: preselectedDoctorId,
     },
   });
 

@@ -13,9 +13,15 @@ interface FullCalendarProps {
   appointments: any[];
   patients: Patient[];
   onDateSelect: (date: Date) => void;
+  selectedDoctorId?: string | null;
 }
 
-export function AppointmentCalendar({ appointments, patients, onDateSelect }: FullCalendarProps) {
+export function AppointmentCalendar({ 
+  appointments, 
+  patients, 
+  onDateSelect,
+  selectedDoctorId 
+}: FullCalendarProps) {
   const [showDayPreview, setShowDayPreview] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -62,11 +68,6 @@ export function AppointmentCalendar({ appointments, patients, onDateSelect }: Fu
             }
             .fc-event-main-frame {
               height: 100% !important;
-            }
-            .fc-daygrid-event {
-              margin: 2px 4px !important;
-              padding: 2px 4px !important;
-              border-radius: 4px !important;
             }
             .fc-timegrid-col-events {
               margin: 0 !important;
