@@ -82,7 +82,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 <FormItem>
                   <FormLabel>Nom du rôle</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: Administrateur" disabled={!!role} />
+                    <Input {...field} placeholder="Ex: Administrateur" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,8 +96,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      {...field} 
+                    <Textarea
+                      {...field}
                       placeholder="Décrivez les responsabilités de ce rôle"
                     />
                   </FormControl>

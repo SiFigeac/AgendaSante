@@ -40,6 +40,15 @@ const DEFAULT_PERMISSIONS = {
   admin: ["view_appointments", "manage_all_appointments", "manage_patients", "manage_users", "manage_system"],
 };
 
+// Define PREDEFINED_ROLES.  This is crucial and missing from the original and edited code.
+const PREDEFINED_ROLES = [
+  { name: "doctor", displayName: "Médecin" },
+  { name: "staff", displayName: "Personnel" },
+  { name: "admin", displayName: "Administrateur" },
+  // Add more roles here as needed
+];
+
+
 export function UserForm({ open, onOpenChange }: UserFormProps) {
   const { toast } = useToast();
 
@@ -196,9 +205,11 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="doctor">Médecin</SelectItem>
-                      <SelectItem value="staff">Personnel</SelectItem>
-                      <SelectItem value="admin">Administrateur</SelectItem>
+                      {PREDEFINED_ROLES.map((role) => (
+                        <SelectItem key={role.name} value={role.name}>
+                          {role.displayName}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

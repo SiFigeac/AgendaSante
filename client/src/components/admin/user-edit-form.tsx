@@ -143,9 +143,11 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="doctor">Médecin</SelectItem>
-                      <SelectItem value="staff">Personnel</SelectItem>
-                      <SelectItem value="admin">Administrateur</SelectItem>
+                      {PREDEFINED_ROLES.map((role) => (
+                        <SelectItem key={role.name} value={role.name}>
+                          {role.displayName}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -162,9 +164,9 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                     <FormLabel>Couleur du planning</FormLabel>
                     <div className="flex items-center gap-4">
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          type="color" 
+                        <Input
+                          {...field}
+                          type="color"
                           className="w-24 h-12"
                           value={field.value || "#4B5563"}
                           onChange={(e) => {
@@ -173,7 +175,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                           }}
                         />
                       </FormControl>
-                      <div 
+                      <div
                         className="w-12 h-12 rounded-full border-2"
                         style={{ backgroundColor: field.value || "#4B5563" }}
                       />

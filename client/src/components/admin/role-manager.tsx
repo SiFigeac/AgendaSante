@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { 
   Card,
@@ -10,34 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoleForm } from "./role-form";
-
-const PREDEFINED_ROLES = [
-  {
-    name: 'doctor',
-    displayName: 'Médecin',
-    description: 'Médecin pouvant gérer ses rendez-vous et patients'
-  },
-  {
-    name: 'staff',
-    displayName: 'Personnel',
-    description: 'Personnel administratif avec accès limité'
-  },
-  {
-    name: 'admin',
-    displayName: 'Administrateur',
-    description: 'Accès complet à toutes les fonctionnalités du système'
-  },
-  {
-    name: 'secretary',
-    displayName: 'Secrétaire',
-    description: 'Gestion des rendez-vous et de l\'accueil des patients'
-  },
-  {
-    name: 'assistant',
-    displayName: 'Assistant',
-    description: 'Assistant médical avec accès aux dossiers patients'
-  }
-];
+import { PREDEFINED_ROLES } from "@/lib/roles";
 
 export function RoleManager() {
   const [showRoleForm, setShowRoleForm] = useState(false);
@@ -51,6 +24,11 @@ export function RoleManager() {
   const handleAddRole = () => {
     setSelectedRole(null);
     setShowRoleForm(true);
+  };
+
+  const handleDeleteRole = (role: typeof PREDEFINED_ROLES[0]) => {
+    // TODO: Implement role deletion
+    console.log("Deleting role:", role);
   };
 
   return (
@@ -96,14 +74,24 @@ export function RoleManager() {
                       {role.description}
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditRole(role)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Modifier le rôle</span>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditRole(role)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Modifier le rôle</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteRole(role)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <span className="sr-only">Supprimer le rôle</span>
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
