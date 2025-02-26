@@ -200,44 +200,51 @@ export function DoctorsSchedule() {
       <style>
         {`
           .fc-timegrid-event-harness {
-            margin: 0 2px !important;
+            margin: 0 4px !important;
           }
           .fc-timegrid-event {
             border: none !important;
-            padding: 0 !important;
+            padding: 2px !important;
+            margin: 0 !important;
           }
           .fc-timegrid-event .fc-event-main {
-            padding: 4px !important;
+            padding: 2px 4px !important;
           }
           .fc .fc-timegrid-slot {
-            height: 2.5em !important;
+            height: 3em !important;
           }
           .fc .fc-timegrid-col-events {
-            margin: 0 4px !important;
+            margin: 0 6px !important;
           }
           .availability-event {
             border-radius: 4px !important;
-            margin: 1px 0 !important;
-            cursor: grab !important;
+            margin: 0 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.2s ease !important;
           }
           .availability-event:hover {
-            filter: brightness(0.95);
+            transform: scale(1.02);
+            z-index: 5 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
           }
-          .availability-event.fc-event-dragging {
-            opacity: 0.8;
-            cursor: grabbing !important;
+          .fc-v-event {
+            border: none !important;
           }
-          .fc-event-selected {
-            z-index: 9999 !important;
+          .fc-timegrid-event-harness-inset .fc-timegrid-event {
+            box-shadow: none !important;
+          }
+          .fc .fc-timegrid-now-indicator-line {
+            border-color: #ef4444;
+          }
+          .fc .fc-timegrid-now-indicator-arrow {
+            border-color: #ef4444;
+          }
+          .fc-event-selected,
+          .fc-event:focus {
+            box-shadow: 0 0 0 2px #000 !important;
           }
           .fc-timegrid-event.fc-event-mirror {
-            opacity: 0.7 !important;
-          }
-          .fc-timegrid-more-link {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
-            padding: 2px 4px;
-            font-size: 0.9em;
+            background-color: rgba(255, 255, 255, 0.75) !important;
           }
         `}
       </style>

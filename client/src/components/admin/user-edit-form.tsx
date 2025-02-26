@@ -32,7 +32,7 @@ interface UserEditFormProps {
 
 function generatePastelColor(): string {
   const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 80%)`;
+  return `hsl(${hue}, 70%, 75%)`;
 }
 
 export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
@@ -55,7 +55,6 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
 
   const updateUser = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Updating user with data:", data);
       const res = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
       if (!res.ok) {
         const error = await res.text();
@@ -204,7 +203,10 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => field.onChange(generatePastelColor())}
+                          onClick={() => {
+                            const newColor = generatePastelColor();
+                            field.onChange(newColor);
+                          }}
                         >
                           Générer
                         </Button>
