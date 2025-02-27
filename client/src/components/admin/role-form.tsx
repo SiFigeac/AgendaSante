@@ -12,26 +12,24 @@ import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-// Schéma de base pour les permissions
-const permissionsSchema = z.object({
+// Schéma pour la création (nom obligatoire)
+const createRoleSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  description: z.string(),
   canManageUsers: z.boolean(),
   canManageRoles: z.boolean(),
   canManageAppointments: z.boolean(),
   canViewReports: z.boolean(),
 });
 
-// Schéma pour la création (nom obligatoire)
-const createRoleSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
-  description: z.string(),
-  permissions: permissionsSchema,
-});
-
 // Schéma pour la modification (tous les champs optionnels)
 const updateRoleSchema = z.object({
   name: z.string().optional(),
-  description: z.string().optional(),
-  permissions: permissionsSchema,
+  description: z.string(),
+  canManageUsers: z.boolean(),
+  canManageRoles: z.boolean(),
+  canManageAppointments: z.boolean(),
+  canViewReports: z.boolean(),
 });
 
 type RoleFormData = z.infer<typeof createRoleSchema>;
@@ -52,12 +50,10 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      permissions: role?.permissions || {
-        canManageUsers: false,
-        canManageRoles: false,
-        canManageAppointments: false,
-        canViewReports: false,
-      },
+      canManageUsers: role?.canManageUsers || false,
+      canManageRoles: role?.canManageRoles || false,
+      canManageAppointments: role?.canManageAppointments || false,
+      canViewReports: role?.canViewReports || false,
     },
   });
 
@@ -67,9 +63,12 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       if (role) {
         // Mise à jour d'un rôle existant
         updateRole(role.name, {
-          name: data.name || role.name, // Garder l'ancien nom si pas de nouveau nom
+          name: data.name || role.name,
           description: data.description,
-          permissions: data.permissions,
+          canManageUsers: data.canManageUsers,
+          canManageRoles: data.canManageRoles,
+          canManageAppointments: data.canManageAppointments,
+          canViewReports: data.canViewReports,
         });
         toast({
           title: "Succès",
@@ -78,10 +77,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       } else {
         // Création d'un nouveau rôle
         addRole({
-          name: data.name,
-          description: data.description,
-          permissions: data.permissions,
-          displayName: data.name, // Utiliser le même nom pour displayName
+          ...data,
+          displayName: data.name,
         });
         toast({
           title: "Succès",
@@ -148,7 +145,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.canManageUsers"
+                name="canManageUsers"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0">
                     <FormLabel>Gestion des utilisateurs</FormLabel>
@@ -164,7 +161,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.canManageRoles"
+                name="canManageRoles"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0">
                     <FormLabel>Gestion des rôles</FormLabel>
@@ -180,7 +177,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.canManageAppointments"
+                name="canManageAppointments"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0">
                     <FormLabel>Gestion des rendez-vous</FormLabel>
@@ -196,7 +193,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.canViewReports"
+                name="canViewReports"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0">
                     <FormLabel>Accès aux rapports</FormLabel>

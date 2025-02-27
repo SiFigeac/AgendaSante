@@ -5,12 +5,10 @@ export type Role = {
   name: string;
   displayName: string;
   description: string;
-  permissions: {
-    canManageUsers: boolean;
-    canManageRoles: boolean;
-    canManageAppointments: boolean;
-    canViewReports: boolean;
-  };
+  canManageUsers: boolean;
+  canManageRoles: boolean;
+  canManageAppointments: boolean;
+  canViewReports: boolean;
 };
 
 const defaultRoles: Role[] = [
@@ -18,34 +16,28 @@ const defaultRoles: Role[] = [
     name: 'doctor',
     displayName: 'Médecin',
     description: 'Médecin pouvant gérer ses rendez-vous et patients',
-    permissions: {
-      canManageUsers: false,
-      canManageRoles: false,
-      canManageAppointments: true,
-      canViewReports: true,
-    }
+    canManageUsers: false,
+    canManageRoles: false,
+    canManageAppointments: true,
+    canViewReports: true,
   },
   {
     name: 'staff',
     displayName: 'Personnel',
     description: 'Personnel administratif avec accès limité',
-    permissions: {
-      canManageUsers: false,
-      canManageRoles: false,
-      canManageAppointments: true,
-      canViewReports: false,
-    }
+    canManageUsers: false,
+    canManageRoles: false,
+    canManageAppointments: true,
+    canViewReports: false,
   },
   {
     name: 'admin',
     displayName: 'Administrateur',
     description: 'Accès complet à toutes les fonctionnalités du système',
-    permissions: {
-      canManageUsers: true,
-      canManageRoles: true,
-      canManageAppointments: true,
-      canViewReports: true,
-    }
+    canManageUsers: true,
+    canManageRoles: true,
+    canManageAppointments: true,
+    canViewReports: true,
   }
 ];
 
