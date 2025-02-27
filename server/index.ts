@@ -1,5 +1,6 @@
 import express from "express";
 import { setupVite, serveStatic, log } from "./vite";
+import { createServer } from "http";
 
 console.log('Starting server with minimal configuration...');
 
@@ -9,54 +10,61 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Root route
-app.get("/", (_req, res) => {
-  console.log("Root request received");
-  res.send("Server is running");
-});
-
-// Test route
-app.get("/ping", (_req, res) => {
-  console.log("Ping request received");
-  res.send("pong");
-});
-
-// Basic error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Server Error:', err);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
-// 404 handler (retained from original for completeness)
-app.use((req, res) => {
-  log(`404 Not Found: ${req.method} ${req.path}`);
-  res.status(404).json({ error: 'Not Found' });
-});
-
-
+// Create HTTP server
 const port = 5000;
-const server = app.listen({
-  port,
-  host: "0.0.0.0",
-}, async (err?: Error) => {
-  if (err) {
-    console.error("Error starting server:", err);
-    process.exit(1);
-  }
-  console.log(`Server running on port ${port}`);
+const server = createServer(app);
 
-  // Setup Vite in development mode
+(async () => {
   try {
+    // Setup Vite first
     console.log('Setting up Vite...');
     await setupVite(app, server);
     console.log('Vite setup complete');
+
+    // Then add API routes
+    app.get("/api", (_req, res) => {
+      console.log("API root request received");
+      res.json({ status: "API is running" });
+    });
+
+    app.get("/api/ping", (_req, res) => {
+      console.log("Ping request received");
+      res.send("pong");
+    });
+
+    // Error handler
+    app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      console.error('Server Error:', err);
+      res.status(500).json({ error: "Internal Server Error" });
+    });
+
+    // Serve static files in production
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Setting up static file serving for production...');
+      serveStatic(app);
+    }
+
+    // 404 handler (after all other routes)
+    app.use((req, res) => {
+      log(`404 Not Found: ${req.method} ${req.path}`);
+      res.status(404).json({ error: 'Not Found' });
+    });
+
+    // Start the server
+    server.listen({
+      port,
+      host: "0.0.0.0",
+    }, () => {
+      console.log(`Server running on port ${port}`);
+    });
+
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+      process.exit(1);
+    });
+
   } catch (error) {
-    console.error('Error setting up Vite:', error);
+    console.error('Error during server startup:', error);
     process.exit(1);
   }
-});
-
-server.on('error', (err) => {
-  console.error('Server error:', err);
-  process.exit(1);
-});
+})();
