@@ -45,6 +45,7 @@ export const availability = pgTable("availability", {
   isBooked: boolean("is_booked").notNull().default(false),
 });
 
+// Modification du schéma de validation pour les dates et les permissions
 export const insertUserSchema = z.object({
   username: z.string().min(1, "Le nom d'utilisateur est requis"),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),

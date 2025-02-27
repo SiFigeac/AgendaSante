@@ -5,6 +5,7 @@ export type Role = {
   name: string;
   displayName: string;
   description: string;
+  permissions: string[];
 };
 
 const defaultRoles: Role[] = [
@@ -12,16 +13,19 @@ const defaultRoles: Role[] = [
     name: 'admin',
     displayName: 'Administrateur',
     description: 'Accès complet à toutes les fonctionnalités du système',
+    permissions: ['users', 'roles', 'appointments', 'reports']
   },
   {
     name: 'staff',
     displayName: 'Personnel',
     description: 'Personnel administratif avec accès limité',
+    permissions: ['appointments']
   },
   {
     name: 'doctor',
     displayName: 'Médecin',
     description: 'Médecin pouvant gérer ses rendez-vous et patients',
+    permissions: ['appointments', 'reports']
   }
 ];
 
@@ -51,7 +55,8 @@ export const useRoleStore = create<RoleStore>()(
               ? {
                   ...role,
                   ...updatedRole,
-                  displayName: updatedRole.name || role.displayName,
+                  // Si un nouveau nom est fourni, mettre à jour aussi le displayName
+                  ...(updatedRole.name && { displayName: updatedRole.name }),
                 }
               : role
           ),

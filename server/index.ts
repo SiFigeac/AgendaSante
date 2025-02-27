@@ -1,61 +1,69 @@
-import express from "express";
-import { setupVite, serveStatic, log } from "./vite";
+import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-
-console.log('Starting server initialization...');
+import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-const port = 5000;
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "…";
+      }
+
+      log(logLine);
+    }
+  });
+
+  next();
+});
 
 (async () => {
-  try {
-    // Basic middleware
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: false }));
+  const server = await registerRoutes(app);
 
-    // Mount API router first
-    console.log('Setting up API routes...');
-    const server = registerRoutes(app);
-    console.log('API routes setup complete');
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-    // Then setup Vite
-    console.log('Setting up Vite...');
+    res.status(status).json({ message });
+    throw err;
+  });
+
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (app.get("env") === "development") {
     await setupVite(app, server);
-    console.log('Vite setup complete');
-
-    // Serve static files in production
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Setting up static file serving...');
-      serveStatic(app);
-    }
-
-    // Error handler
-    app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      console.error('Server Error:', err);
-      res.status(500).json({ error: "Internal Server Error" });
-    });
-
-    // 404 handler (after all other routes)
-    app.use((req, res) => {
-      log(`404 Not Found: ${req.method} ${req.path}`);
-      res.status(404).json({ error: 'Not Found' });
-    });
-
-    // Start the server
-    server.listen({
-      port,
-      host: "0.0.0.0",
-    }, () => {
-      console.log(`Server running on port ${port}`);
-    });
-
-    server.on('error', (err) => {
-      console.error('Server error:', err);
-      process.exit(1);
-    });
-
-  } catch (error) {
-    console.error('Error during server startup:', error);
-    process.exit(1);
+  } else {
+    serveStatic(app);
   }
+
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client
+  const port = 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+  });
 })();

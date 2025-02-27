@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,17 +25,27 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
+      users: role?.permissions.includes("users") || false,
+      roles: role?.permissions.includes("roles") || false,
+      appointments: role?.permissions.includes("appointments") || false,
+      reports: role?.permissions.includes("reports") || false,
     },
   });
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      // Convertir les switches en tableau de permissions
+      const permissions = ["users", "roles", "appointments", "reports"].filter(
+        (perm) => data[perm]
+      );
+
       if (role) {
         // Mise à jour
         updateRole(role.name, {
           description: data.description,
-          ...(data.name ? { name: data.name } : {}),
+          permissions,
+          ...(data.name && { name: data.name }),
         });
       } else {
         // Création
@@ -45,13 +56,15 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
           name: data.name,
           displayName: data.name,
           description: data.description,
+          permissions,
         });
       }
 
       toast({
         title: "Succès",
-        description: role ? "Le rôle a été mis à jour avec succès" : "Le rôle a été créé avec succès",
+        description: role ? "Rôle mis à jour avec succès" : "Rôle créé avec succès",
       });
+
       onOpenChange(false);
       form.reset();
     } catch (error: any) {
@@ -106,6 +119,74 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Permissions</h4>
+
+              <FormField
+                control={form.control}
+                name="users"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des utilisateurs</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="roles"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des rôles</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="appointments"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des rendez-vous</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="reports"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Accès aux rapports</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
