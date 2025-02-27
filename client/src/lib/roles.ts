@@ -50,11 +50,8 @@ export const useRoleStore = create<RoleStore>()(
             role.name === oldName
               ? {
                   ...role,
-                  description: updatedRole.description ?? role.description,
-                  ...(updatedRole.name ? {
-                    name: updatedRole.name,
-                    displayName: updatedRole.name
-                  } : {})
+                  ...updatedRole,
+                  displayName: updatedRole.name || role.displayName,
                 }
               : role
           ),

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PERMISSION_LABELS, usePermissionStore, type Permission } from "@/lib/permissions";
+import { useRoleStore } from "@/lib/roles";
 import { Switch } from "@/components/ui/switch";
 import { 
   Card, 
@@ -7,20 +9,28 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function PermissionManager() {
-  const [permissions, setPermissions] = useState({
-    users: false,
-    roles: false,
-    appointments: false,
-    reports: false,
-  });
+  const { roles } = useRoleStore();
+  const { rolePermissions, setRolePermissions } = usePermissionStore();
+  const [selectedRole, setSelectedRole] = useState(roles[0]?.name || "");
 
-  const handlePermissionChange = (permission: string) => {
-    setPermissions(prev => ({
-      ...prev,
-      [permission]: !prev[permission]
-    }));
+  const handlePermissionChange = (permission: Permission) => {
+    if (!selectedRole) return;
+
+    const currentPermissions = rolePermissions[selectedRole] || [];
+    const newPermissions = currentPermissions.includes(permission)
+      ? currentPermissions.filter(p => p !== permission)
+      : [...currentPermissions, permission];
+
+    setRolePermissions(selectedRole, newPermissions);
   };
 
   return (
@@ -28,49 +38,55 @@ export function PermissionManager() {
       <div>
         <h2 className="text-2xl font-bold">Permissions</h2>
         <p className="text-muted-foreground">
-          Configurez les permissions du système
+          Configurez les permissions pour chaque rôle
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Permissions disponibles</CardTitle>
+          <CardTitle>Gestion des permissions</CardTitle>
           <CardDescription>
-            Activez ou désactivez les permissions
+            Sélectionnez un rôle et configurez ses permissions
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
-            <div className="font-medium">Gestion des utilisateurs</div>
-            <Switch
-              checked={permissions.users}
-              onCheckedChange={() => handlePermissionChange('users')}
-            />
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Sélectionner un rôle</label>
+            <Select
+              value={selectedRole}
+              onValueChange={setSelectedRole}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map((role) => (
+                  <SelectItem key={role.name} value={role.name}>
+                    {role.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <div className="font-medium">Gestion des rôles</div>
-            <Switch
-              checked={permissions.roles}
-              onCheckedChange={() => handlePermissionChange('roles')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div className="font-medium">Gestion des rendez-vous</div>
-            <Switch
-              checked={permissions.appointments}
-              onCheckedChange={() => handlePermissionChange('appointments')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div className="font-medium">Accès aux rapports</div>
-            <Switch
-              checked={permissions.reports}
-              onCheckedChange={() => handlePermissionChange('reports')}
-            />
-          </div>
+          {selectedRole && (
+            <div className="space-y-4">
+              {(Object.entries(PERMISSION_LABELS) as [Permission, string][]).map(([permission, label]) => (
+                <div
+                  key={permission}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="font-medium">
+                    {label}
+                  </div>
+                  <Switch
+                    checked={rolePermissions[selectedRole]?.includes(permission)}
+                    onCheckedChange={() => handlePermissionChange(permission)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
