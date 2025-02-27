@@ -1,5 +1,5 @@
 import express from "express";
-import { log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite";
 
 console.log('Starting server with minimal configuration...');
 
@@ -38,12 +38,22 @@ const port = 5000;
 const server = app.listen({
   port,
   host: "0.0.0.0",
-}, (err?: Error) => {
+}, async (err?: Error) => {
   if (err) {
     console.error("Error starting server:", err);
     process.exit(1);
   }
   console.log(`Server running on port ${port}`);
+
+  // Setup Vite in development mode
+  try {
+    console.log('Setting up Vite...');
+    await setupVite(app, server);
+    console.log('Vite setup complete');
+  } catch (error) {
+    console.error('Error setting up Vite:', error);
+    process.exit(1);
+  }
 });
 
 server.on('error', (err) => {
