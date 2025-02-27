@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
-const roleSchema = z.object({
+const createRoleSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   description: z.string(),
   permissions: z.object({
@@ -21,7 +21,11 @@ const roleSchema = z.object({
   }),
 });
 
-type RoleFormData = z.infer<typeof roleSchema>;
+const updateRoleSchema = createRoleSchema.extend({
+  name: z.string().optional(),
+});
+
+type RoleFormData = z.infer<typeof createRoleSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -37,7 +41,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
@@ -53,8 +57,12 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const onSubmit = async (data: RoleFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement role creation/update API
-      console.log("Role data:", data);
+      // Si on modifie un rôle et que le nom n'est pas fourni, utiliser le nom initial
+      const roleData = {
+        ...data,
+        name: data.name || role?.name || "",
+      };
+      console.log("Role data:", roleData);
       onOpenChange(false);
       form.reset();
     } catch (error) {
@@ -80,9 +88,15 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom du rôle</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    Nom du rôle
+                    {role && <span className="text-sm text-muted-foreground">(optionnel)</span>}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: Administrateur" />
+                    <Input 
+                      {...field} 
+                      placeholder={role ? role.name : "Ex: Administrateur"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
