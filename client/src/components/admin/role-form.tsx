@@ -21,43 +21,43 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { addRole, updateRole } = useRoleStore();
   const { toast } = useToast();
 
+  // Initialiser les permissions du formulaire
+  const defaultPermissions = {
+    name: role?.name || "",
+    description: role?.description || "",
+    users: role ? role.permissions.includes("users") : false,
+    roles: role ? role.permissions.includes("roles") : false,
+    appointments: role ? role.permissions.includes("appointments") : false,
+    reports: role ? role.permissions.includes("reports") : false,
+  };
+
   const form = useForm({
-    defaultValues: {
-      name: role?.name || "",
-      description: role?.description || "",
-      users: role?.permissions.includes("users") || false,
-      roles: role?.permissions.includes("roles") || false,
-      appointments: role?.permissions.includes("appointments") || false,
-      reports: role?.permissions.includes("reports") || false,
-    },
+    defaultValues: defaultPermissions
   });
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       // Convertir les switches en tableau de permissions
-      const permissions = ["users", "roles", "appointments", "reports"].filter(
-        (perm) => data[perm]
-      );
+      const permissions = [];
+      if (data.users) permissions.push("users");
+      if (data.roles) permissions.push("roles");
+      if (data.appointments) permissions.push("appointments");
+      if (data.reports) permissions.push("reports");
+
+      const roleData = {
+        name: data.name,
+        description: data.description,
+        permissions: permissions,
+        displayName: data.name || role?.displayName,
+      };
 
       if (role) {
         // Mise à jour
-        updateRole(role.name, {
-          description: data.description,
-          permissions,
-          ...(data.name && { name: data.name }),
-        });
+        updateRole(role.name, roleData);
       } else {
         // Création
-        if (!data.name) {
-          throw new Error("Le nom est requis pour créer un rôle");
-        }
-        addRole({
-          name: data.name,
-          displayName: data.name,
-          description: data.description,
-          permissions,
-        });
+        addRole(roleData as Role);
       }
 
       toast({
