@@ -76,8 +76,11 @@ export function PermissionManager() {
                   key={permission}
                   className="flex items-center justify-between py-2"
                 >
-                  <div className="font-medium">
-                    {label}
+                  <div className="text-sm">
+                    <div className="font-medium">{label}</div>
+                    <div className="text-muted-foreground">
+                      {permission}
+                    </div>
                   </div>
                   <Switch
                     checked={rolePermissions[selectedRole]?.includes(permission)}

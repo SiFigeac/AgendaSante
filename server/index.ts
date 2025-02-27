@@ -2,22 +2,33 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Validate required environment variables
+const requiredEnvVars = ['SESSION_SECRET', 'DATABASE_URL'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`Error: ${envVar} environment variable is not set`);
+    process.exit(1);
+  }
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Request logging middleware
+// Enhanced request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  // Capture JSON responses
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
+  // Log requests on completion
   res.on("finish", () => {
     const duration = Date.now() - start;
     let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
@@ -34,35 +45,52 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    const server = await registerRoutes(app);
 
-  // Error handling middleware
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    console.error('Server Error:', err);
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    log(`Error: ${status} - ${message}`);
-    res.status(status).json({ error: message });
-  });
+    // Error handling middleware
+    app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+      console.error('Server Error:', err);
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      log(`Error: ${status} - ${message}`);
+      res.status(status).json({ error: message });
+    });
 
-  // 404 handler
-  app.use((req, res) => {
-    log(`404 Not Found: ${req.method} ${req.path}`);
-    res.status(404).json({ error: 'Not Found' });
-  });
+    // 404 handler
+    app.use((req, res) => {
+      log(`404 Not Found: ${req.method} ${req.path}`);
+      res.status(404).json({ error: 'Not Found' });
+    });
 
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Enhanced server startup
+    const port = 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, (err?: Error) => {
+      if (err) {
+        console.error("Error starting server:", err);
+        process.exit(1);
+      }
+      log(`Server running on port ${port}`);
+    });
+
+    // Add error handler for the server
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('Fatal error during server startup:', error);
+    process.exit(1);
   }
-
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`Server running on port ${port}`);
-  });
 })();
