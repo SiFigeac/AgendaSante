@@ -1,6 +1,6 @@
+import { Router } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -9,14 +9,14 @@ import { User as SelectUser } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
+const scryptAsync = promisify(scrypt);
+const PostgresSessionStore = connectPg(session);
+
 declare global {
   namespace Express {
     interface User extends SelectUser {}
   }
 }
-
-const scryptAsync = promisify(scrypt);
-const PostgresSessionStore = connectPg(session);
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -31,98 +31,72 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-export function setupAuth(app: Express) {
-  console.log('Setting up authentication...');
-
-  if (!process.env.SESSION_SECRET) {
-    throw new Error('SESSION_SECRET environment variable is required');
-  }
-
+export function setupAuth(router: Router) {
   const sessionStore = new PostgresSessionStore({
     pool,
     tableName: 'session',
     createTableIfMissing: true,
   });
 
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET,
+  // Session middleware
+  router.use(session({
+    store: sessionStore,
+    secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    },
-    name: 'session'
-  };
+    }
+  }));
 
-  console.log('Configuring session middleware...');
-  app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
-  console.log('Session middleware configured');
+  router.use(passport.initialize());
+  router.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username: string, password: string, done) => {
+    new LocalStrategy(async (username, password, done) => {
       try {
-        console.log(`Attempting authentication for user: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || !user.isActive || !(await comparePasswords(password, user.password))) {
-          console.log('Authentication failed: Invalid credentials');
+        if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: "Identifiants invalides" });
         }
-        console.log('Authentication successful');
         return done(null, user);
       } catch (error) {
-        console.error('Authentication error:', error);
         return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => {
-    console.log('Serializing user:', user.id);
-    done(null, user.id);
-  });
-
+  passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log('Deserializing user:', id);
       const user = await storage.getUser(id);
-      if (!user) {
-        console.log('User not found during deserialization');
-        return done(null, false);
-      }
       done(null, user);
     } catch (error) {
-      console.error('Deserialization error:', error);
       done(error);
     }
   });
 
-  app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
+  router.post("/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         console.error('Login error:', err);
-        return next(err);
+        return res.status(500).json({ error: "Erreur interne du serveur" });
       }
+
       if (!user) {
         return res.status(401).json({ error: info?.message || "Identifiants invalides" });
       }
+
       req.login(user, (err) => {
         if (err) {
           console.error('Session creation error:', err);
-          return next(err);
+          return res.status(500).json({ error: "Erreur de création de session" });
         }
         res.json({ 
           id: user.id,
           username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
           role: user.role,
           isAdmin: user.isAdmin
         });
@@ -130,25 +104,21 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.logout((err) => {
-        if (err) return next(err);
-        res.sendStatus(200);
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      next(error);
-    }
+  router.post("/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Erreur lors de la déconnexion" });
+      }
+      res.json({ message: "Déconnecté avec succès" });
+    });
   });
 
-  app.get("/api/user", (req: Request, res: Response) => {
-    console.log('Checking user authentication status');
+  router.get("/user", (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Non authentifié" });
     }
     res.json(req.user);
   });
 
-  console.log('Authentication setup complete');
+  return router;
 }

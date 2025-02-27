@@ -1,52 +1,43 @@
 import express from "express";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
-import { setupAuth } from "./auth";
+import { createApiRouter } from "./routes";
 
-console.log('Starting server with minimal configuration...');
+console.log('Starting server initialization...');
 
 const app = express();
-
-// Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Create HTTP server
 const port = 5000;
 const server = createServer(app);
 
 (async () => {
   try {
-    // Setup Vite first
+    // Basic middleware
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: false }));
+
+    // Mount API router first
+    console.log('Setting up API routes...');
+    const apiRouter = createApiRouter();
+    app.use('/api', apiRouter);
+    console.log('API routes setup complete');
+
+    // Then setup Vite
     console.log('Setting up Vite...');
     await setupVite(app, server);
     console.log('Vite setup complete');
 
-    // Then add API routes
-    app.get("/api", (_req, res) => {
-      console.log("API root request received");
-      res.json({ status: "API is running" });
-    });
 
-    app.get("/api/ping", (_req, res) => {
-      console.log("Ping request received");
-      res.send("pong");
-    });
-
-    // Setup basic auth
-    setupAuth(app);
+    // Serve static files in production
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Setting up static file serving...');
+      serveStatic(app);
+    }
 
     // Error handler
     app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
       console.error('Server Error:', err);
       res.status(500).json({ error: "Internal Server Error" });
     });
-
-    // Serve static files in production
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Setting up static file serving for production...');
-      serveStatic(app);
-    }
 
     // 404 handler (after all other routes)
     app.use((req, res) => {

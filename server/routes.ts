@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertPatientSchema, insertAppointmentSchema, insertUserSchema, insertAvailabilitySchema } from "@shared/schema";
 import { WebSocketServer } from 'ws';
+import { Router } from "express";
 
 interface AuthenticatedRequest extends Request {
   user?: Express.User;
@@ -44,11 +45,27 @@ function isAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   }
 }
 
-export function registerRoutes(app: any): Server {
-  setupAuth(app);
+export function createApiRouter() {
+  const router = Router();
+
+  // Ensure all API responses are JSON
+  router.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+  });
+
+  // Test routes
+  router.get("/ping", (_req, res) => {
+    console.log("Ping request received");
+    res.json({ message: "pong" });
+  });
+
+  // Setup auth routes on the router
+  setupAuth(router);
+
 
   // Routes d'administration
-  app.get("/api/admin/users", checkPermission("admin:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/admin/users", checkPermission("admin:read"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const users = await storage.getUsers();
       res.json(users);
@@ -58,7 +75,7 @@ export function registerRoutes(app: any): Server {
     }
   });
 
-  app.post("/api/admin/users", checkPermission("admin:create"), async (req: AuthenticatedRequest, res: Response) => {
+  router.post("/admin/users", checkPermission("admin:create"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const parsed = insertUserSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -72,7 +89,7 @@ export function registerRoutes(app: any): Server {
     }
   });
 
-  app.patch("/api/admin/users/:id", checkPermission("admin:update"), async (req: AuthenticatedRequest, res: Response) => {
+  router.patch("/admin/users/:id", checkPermission("admin:update"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = parseInt(req.params.id);
       const updated = await storage.updateUser(userId, req.body);
@@ -83,7 +100,7 @@ export function registerRoutes(app: any): Server {
     }
   });
 
-  app.delete("/api/admin/users/:id", checkPermission("admin:delete"), async (req: AuthenticatedRequest, res: Response) => {
+  router.delete("/admin/users/:id", checkPermission("admin:delete"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       await storage.deleteUser(parseInt(req.params.id));
       res.sendStatus(204);
@@ -94,12 +111,12 @@ export function registerRoutes(app: any): Server {
   });
 
   // Routes d'availability
-  app.get("/api/availability", checkPermission("availability:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/availability", checkPermission("availability:read"), async (req: AuthenticatedRequest, res: Response) => {
     const availabilities = await storage.getAvailabilities();
     res.json(availabilities);
   });
 
-  app.post("/api/availability", checkPermission("availability:create"), async (req: AuthenticatedRequest, res: Response) => {
+  router.post("/availability", checkPermission("availability:create"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const parsed = insertAvailabilitySchema.safeParse(req.body);
       if (!parsed.success) {
@@ -113,7 +130,7 @@ export function registerRoutes(app: any): Server {
     }
   });
 
-  app.patch("/api/availability/:id", checkPermission("availability:update"), async (req: AuthenticatedRequest, res: Response) => {
+  router.patch("/availability/:id", checkPermission("availability:update"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Validation de l'ID
       const availabilityId = parseInt(req.params.id);
@@ -146,7 +163,7 @@ export function registerRoutes(app: any): Server {
     }
   });
 
-  app.delete("/api/availability/:id", checkPermission("availability:delete"), async (req: AuthenticatedRequest, res: Response) => {
+  router.delete("/availability/:id", checkPermission("availability:delete"), async (req: AuthenticatedRequest, res: Response) => {
     try {
       await storage.deleteAvailability(parseInt(req.params.id));
       res.sendStatus(204);
@@ -157,12 +174,12 @@ export function registerRoutes(app: any): Server {
   });
 
   // Patient routes
-  app.get("/api/patients", checkPermission("patient:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/patients", checkPermission("patient:read"), async (req: AuthenticatedRequest, res: Response) => {
     const patients = await storage.getPatients();
     res.json(patients);
   });
 
-  app.post("/api/patients", checkPermission("patient:create"), async (req: AuthenticatedRequest, res: Response) => {
+  router.post("/patients", checkPermission("patient:create"), async (req: AuthenticatedRequest, res: Response) => {
     const parsed = insertPatientSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
@@ -171,29 +188,29 @@ export function registerRoutes(app: any): Server {
     res.status(201).json(patient);
   });
 
-  app.get("/api/patients/:id", checkPermission("patient:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/patients/:id", checkPermission("patient:read"), async (req: AuthenticatedRequest, res: Response) => {
     const patient = await storage.getPatient(parseInt(req.params.id));
     if (!patient) return res.status(404).send();
     res.json(patient);
   });
 
-  app.patch("/api/patients/:id", checkPermission("patient:update"), async (req: AuthenticatedRequest, res: Response) => {
+  router.patch("/patients/:id", checkPermission("patient:update"), async (req: AuthenticatedRequest, res: Response) => {
     const updated = await storage.updatePatient(parseInt(req.params.id), req.body);
     res.json(updated);
   });
 
-  app.delete("/api/patients/:id", checkPermission("patient:delete"), async (req: AuthenticatedRequest, res: Response) => {
+  router.delete("/patients/:id", checkPermission("patient:delete"), async (req: AuthenticatedRequest, res: Response) => {
     await storage.deletePatient(parseInt(req.params.id));
     res.sendStatus(204);
   });
 
   // Appointment routes
-  app.get("/api/appointments", checkPermission("appointment:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/appointments", checkPermission("appointment:read"), async (req: AuthenticatedRequest, res: Response) => {
     const appointments = await storage.getAppointments();
     res.json(appointments);
   });
 
-  app.post("/api/appointments", checkPermission("appointment:create"), async (req: AuthenticatedRequest, res: Response) => {
+  router.post("/appointments", checkPermission("appointment:create"), async (req: AuthenticatedRequest, res: Response) => {
     const parsed = insertAppointmentSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
@@ -202,25 +219,31 @@ export function registerRoutes(app: any): Server {
     res.status(201).json(appointment);
   });
 
-  app.get("/api/appointments/:id", checkPermission("appointment:read"), async (req: AuthenticatedRequest, res: Response) => {
+  router.get("/appointments/:id", checkPermission("appointment:read"), async (req: AuthenticatedRequest, res: Response) => {
     const appointment = await storage.getAppointment(parseInt(req.params.id));
     if (!appointment) return res.status(404).send();
     res.json(appointment);
   });
 
-  app.patch("/api/appointments/:id", checkPermission("appointment:update"), async (req: AuthenticatedRequest, res: Response) => {
+  router.patch("/appointments/:id", checkPermission("appointment:update"), async (req: AuthenticatedRequest, res: Response) => {
     const updated = await storage.updateAppointment(parseInt(req.params.id), req.body);
     res.json(updated);
   });
 
-  app.delete("/api/appointments/:id", checkPermission("appointment:delete"), async (req: AuthenticatedRequest, res: Response) => {
+  router.delete("/appointments/:id", checkPermission("appointment:delete"), async (req: AuthenticatedRequest, res: Response) => {
     await storage.deleteAppointment(parseInt(req.params.id));
     res.sendStatus(204);
   });
 
-  const httpServer = createServer(app);
+  return router;
+}
+
+export function registerRoutes(app: any): Server {
+  const apiRouter = createApiRouter();
+  app.use('/api', apiRouter); // Mount the API router at /api
 
   // Setup WebSocket server for real-time updates
+  const httpServer = createServer(app);
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
   wss.on('connection', (ws) => {
