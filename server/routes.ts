@@ -1,16 +1,16 @@
-import type { Express } from "express";
+import { type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertPatientSchema, insertAppointmentSchema, insertUserSchema, insertAvailabilitySchema } from "@shared/schema";
 
-function isAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated()) return res.sendStatus(401);
-  if (!req.user?.isAdmin) return res.sendStatus(403);
+function isAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) return res.status(401).send();
+  if (!req.user?.isAdmin) return res.status(403).send();
   next();
 }
 
-export function registerRoutes(app: Express): Server {
+export function registerRoutes(app: any): Server {
   setupAuth(app);
 
   // Routes d'administration
@@ -56,7 +56,7 @@ export function registerRoutes(app: Express): Server {
 
   // Routes d'availability
   app.get("/api/availability", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const availabilities = await storage.getAvailabilities();
     res.json(availabilities);
   });
@@ -120,13 +120,13 @@ export function registerRoutes(app: Express): Server {
 
   // Patient routes
   app.get("/api/patients", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const patients = await storage.getPatients();
     res.json(patients);
   });
 
   app.post("/api/patients", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const parsed = insertPatientSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
@@ -136,33 +136,33 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/patients/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const patient = await storage.getPatient(parseInt(req.params.id));
-    if (!patient) return res.sendStatus(404);
+    if (!patient) return res.status(404).send();
     res.json(patient);
   });
 
   app.patch("/api/patients/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const updated = await storage.updatePatient(parseInt(req.params.id), req.body);
     res.json(updated);
   });
 
   app.delete("/api/patients/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     await storage.deletePatient(parseInt(req.params.id));
     res.sendStatus(204);
   });
 
   // Appointment routes
   app.get("/api/appointments", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const appointments = await storage.getAppointments();
     res.json(appointments);
   });
 
   app.post("/api/appointments", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const parsed = insertAppointmentSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
@@ -172,20 +172,20 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/appointments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const appointment = await storage.getAppointment(parseInt(req.params.id));
-    if (!appointment) return res.sendStatus(404);
+    if (!appointment) return res.status(404).send();
     res.json(appointment);
   });
 
   app.patch("/api/appointments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     const updated = await storage.updateAppointment(parseInt(req.params.id), req.body);
     res.json(updated);
   });
 
   app.delete("/api/appointments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).send();
     await storage.deleteAppointment(parseInt(req.params.id));
     res.sendStatus(204);
   });
