@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const createRoleSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
-  displayName: z.string().min(1, "Le nom d'affichage est requis"),
   description: z.string(),
   permissions: z.object({
     canManageUsers: z.boolean(),
@@ -35,7 +34,6 @@ interface RoleFormProps {
   onOpenChange: (open: boolean) => void;
   role?: {
     name: string;
-    displayName: string;
     description: string;
   } | null;
 }
@@ -49,7 +47,6 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
-      displayName: role?.displayName || "",
       description: role?.description || "",
       permissions: {
         canManageUsers: false,
@@ -67,7 +64,6 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
         // Mise à jour d'un rôle existant
         updateRole(role.name, {
           name: data.name || role.name,
-          displayName: data.displayName,
           description: data.description,
           permissions: data.permissions
         });
@@ -97,7 +93,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {role ? `Modifier le rôle : ${role.displayName}` : 'Nouveau rôle'}
+            {role ? `Modifier le rôle : ${role.name}` : 'Nouveau rôle'}
           </DialogTitle>
         </DialogHeader>
 
@@ -116,23 +112,6 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                     <Input 
                       {...field} 
                       placeholder={role ? role.name : "Ex: admin"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom d'affichage</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Ex: Administrateur"
                     />
                   </FormControl>
                   <FormMessage />
