@@ -51,6 +51,7 @@ const defaultRoles: Role[] = [
 
 type RoleStore = {
   roles: Role[];
+  addRole: (role: Role) => void;
   deleteRole: (roleName: string) => void;
   updateRole: (oldName: string, updatedRole: Partial<Role>) => void;
   resetRoles: () => void;
@@ -60,6 +61,10 @@ export const useRoleStore = create<RoleStore>()(
   persist(
     (set) => ({
       roles: defaultRoles,
+      addRole: (role) =>
+        set((state) => ({
+          roles: [...state.roles, role],
+        })),
       deleteRole: (roleName) =>
         set((state) => ({
           roles: state.roles.filter((role) => role.name !== roleName),
