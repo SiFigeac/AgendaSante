@@ -16,16 +16,16 @@ const defaultRoles: Role[] = [
     permissions: ['users', 'roles', 'appointments', 'reports']
   },
   {
-    name: 'doctor',
-    displayName: 'Médecin',
-    description: 'Médecin pouvant gérer ses rendez-vous et patients',
-    permissions: ['appointments', 'reports']
-  },
-  {
     name: 'staff',
     displayName: 'Personnel',
     description: 'Personnel administratif avec accès limité',
     permissions: ['appointments']
+  },
+  {
+    name: 'doctor',
+    displayName: 'Médecin',
+    description: 'Médecin pouvant gérer ses rendez-vous et patients',
+    permissions: ['appointments', 'reports']
   }
 ];
 

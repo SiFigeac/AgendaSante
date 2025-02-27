@@ -19,10 +19,12 @@ interface RoleFormProps {
 interface FormData {
   name: string;
   description: string;
-  users: boolean;
-  roles: boolean;
-  appointments: boolean;
-  reports: boolean;
+  permissions: {
+    users: boolean;
+    roles: boolean;
+    appointments: boolean;
+    reports: boolean;
+  };
 }
 
 export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
@@ -34,10 +36,12 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      users: role?.permissions?.includes("users") || false,
-      roles: role?.permissions?.includes("roles") || false,
-      appointments: role?.permissions?.includes("appointments") || false,
-      reports: role?.permissions?.includes("reports") || false,
+      permissions: {
+        users: Array.isArray(role?.permissions) ? role.permissions.includes("users") : false,
+        roles: Array.isArray(role?.permissions) ? role.permissions.includes("roles") : false,
+        appointments: Array.isArray(role?.permissions) ? role.permissions.includes("appointments") : false,
+        reports: Array.isArray(role?.permissions) ? role.permissions.includes("reports") : false,
+      }
     },
   });
 
@@ -45,11 +49,9 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     setIsSubmitting(true);
     try {
       // Convertir les switches en tableau de permissions
-      const permissions = [] as string[];
-      if (data.users) permissions.push("users");
-      if (data.roles) permissions.push("roles");
-      if (data.appointments) permissions.push("appointments");
-      if (data.reports) permissions.push("reports");
+      const permissions = Object.entries(data.permissions)
+        .filter(([_, enabled]) => enabled)
+        .map(([permission]) => permission);
 
       if (role) {
         // Mise à jour
@@ -136,7 +138,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="users"
+                name="permissions.users"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des utilisateurs</FormLabel>
@@ -152,7 +154,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="roles"
+                name="permissions.roles"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des rôles</FormLabel>
@@ -168,7 +170,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="appointments"
+                name="permissions.appointments"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des rendez-vous</FormLabel>
@@ -184,7 +186,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="reports"
+                name="permissions.reports"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Accès aux rapports</FormLabel>
