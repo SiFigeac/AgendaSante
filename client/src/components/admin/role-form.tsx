@@ -9,11 +9,11 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useRoleStore } from "@/lib/roles";
+import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-const createRoleSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
+const roleSchema = z.object({
+  name: z.string(),
   description: z.string(),
   permissions: z.object({
     canManageUsers: z.boolean(),
@@ -23,19 +23,12 @@ const createRoleSchema = z.object({
   }),
 });
 
-const updateRoleSchema = createRoleSchema.extend({
-  name: z.string().optional(),
-});
-
-type RoleFormData = z.infer<typeof createRoleSchema>;
+type RoleFormData = z.infer<typeof roleSchema>;
 
 interface RoleFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role?: {
-    name: string;
-    description: string;
-  } | null;
+  role?: Role | null;
 }
 
 export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
@@ -44,11 +37,11 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
+    resolver: zodResolver(roleSchema),
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      permissions: {
+      permissions: role?.permissions || {
         canManageUsers: false,
         canManageRoles: false,
         canManageAppointments: false,
@@ -61,19 +54,14 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     setIsSubmitting(true);
     try {
       if (role) {
-        // Mise à jour d'un rôle existant
         updateRole(role.name, {
-          name: data.name || role.name,
           description: data.description,
-          permissions: data.permissions
+          permissions: data.permissions,
         });
         toast({
           title: "Succès",
           description: "Le rôle a été mis à jour avec succès.",
         });
-      } else {
-        // TODO: Implement role creation
-        console.log("Creating new role:", data);
       }
       onOpenChange(false);
       form.reset();
@@ -93,32 +81,12 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {role ? `Modifier le rôle : ${role.name}` : 'Nouveau rôle'}
+            {role ? `Modifier le rôle : ${role.displayName}` : 'Nouveau rôle'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    Nom du rôle
-                    {role && <span className="text-sm text-muted-foreground">(optionnel)</span>}
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder={role ? role.name : "Ex: admin"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="description"

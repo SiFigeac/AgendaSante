@@ -5,33 +5,47 @@ export type Role = {
   name: string;
   displayName: string;
   description: string;
+  permissions: {
+    canManageUsers: boolean;
+    canManageRoles: boolean;
+    canManageAppointments: boolean;
+    canViewReports: boolean;
+  };
 };
 
-const defaultRoles = [
+const defaultRoles: Role[] = [
   {
     name: 'doctor',
     displayName: 'Médecin',
-    description: 'Médecin pouvant gérer ses rendez-vous et patients'
+    description: 'Médecin pouvant gérer ses rendez-vous et patients',
+    permissions: {
+      canManageUsers: false,
+      canManageRoles: false,
+      canManageAppointments: true,
+      canViewReports: true,
+    }
   },
   {
     name: 'staff',
     displayName: 'Personnel',
-    description: 'Personnel administratif avec accès limité'
+    description: 'Personnel administratif avec accès limité',
+    permissions: {
+      canManageUsers: false,
+      canManageRoles: false,
+      canManageAppointments: true,
+      canViewReports: false,
+    }
   },
   {
     name: 'admin',
     displayName: 'Administrateur',
-    description: 'Accès complet à toutes les fonctionnalités du système'
-  },
-  {
-    name: 'secretary',
-    displayName: 'Secrétaire',
-    description: 'Gestion des rendez-vous et de l\'accueil des patients'
-  },
-  {
-    name: 'assistant',
-    displayName: 'Assistant',
-    description: 'Assistant médical avec accès aux dossiers patients'
+    description: 'Accès complet à toutes les fonctionnalités du système',
+    permissions: {
+      canManageUsers: true,
+      canManageRoles: true,
+      canManageAppointments: true,
+      canViewReports: true,
+    }
   }
 ];
 
@@ -62,6 +76,7 @@ export const useRoleStore = create<RoleStore>()(
     }),
     {
       name: 'role-storage',
+      version: 1,
     }
   )
 );
