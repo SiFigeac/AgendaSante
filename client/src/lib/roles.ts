@@ -5,39 +5,27 @@ export type Role = {
   name: string;
   displayName: string;
   description: string;
-  canManageUsers: boolean;
-  canManageRoles: boolean;
-  canManageAppointments: boolean;
-  canViewReports: boolean;
+  permissions: string[];
 };
 
 const defaultRoles: Role[] = [
   {
+    name: 'admin',
+    displayName: 'Administrateur',
+    description: 'Accès complet à toutes les fonctionnalités du système',
+    permissions: ['users', 'roles', 'appointments', 'reports']
+  },
+  {
     name: 'doctor',
     displayName: 'Médecin',
     description: 'Médecin pouvant gérer ses rendez-vous et patients',
-    canManageUsers: false,
-    canManageRoles: false,
-    canManageAppointments: true,
-    canViewReports: true,
+    permissions: ['appointments', 'reports']
   },
   {
     name: 'staff',
     displayName: 'Personnel',
     description: 'Personnel administratif avec accès limité',
-    canManageUsers: false,
-    canManageRoles: false,
-    canManageAppointments: true,
-    canViewReports: false,
-  },
-  {
-    name: 'admin',
-    displayName: 'Administrateur',
-    description: 'Accès complet à toutes les fonctionnalités du système',
-    canManageUsers: true,
-    canManageRoles: true,
-    canManageAppointments: true,
-    canViewReports: true,
+    permissions: ['appointments']
   }
 ];
 
@@ -46,7 +34,6 @@ type RoleStore = {
   addRole: (role: Role) => void;
   deleteRole: (roleName: string) => void;
   updateRole: (oldName: string, updatedRole: Partial<Role>) => void;
-  resetRoles: () => void;
 };
 
 export const useRoleStore = create<RoleStore>()(
@@ -69,7 +56,6 @@ export const useRoleStore = create<RoleStore>()(
               : role
           ),
         })),
-      resetRoles: () => set({ roles: defaultRoles }),
     }),
     {
       name: 'role-storage',
