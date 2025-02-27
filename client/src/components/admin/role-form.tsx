@@ -16,49 +16,36 @@ interface RoleFormProps {
   role?: Role | null;
 }
 
-interface FormData {
-  name: string;
-  description: string;
-  permissions: {
-    users: boolean;
-    roles: boolean;
-    appointments: boolean;
-    reports: boolean;
-  };
-}
-
 export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addRole, updateRole } = useRoleStore();
   const { toast } = useToast();
 
-  const form = useForm<FormData>({
+  const form = useForm({
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      permissions: {
-        users: Array.isArray(role?.permissions) ? role.permissions.includes("users") : false,
-        roles: Array.isArray(role?.permissions) ? role.permissions.includes("roles") : false,
-        appointments: Array.isArray(role?.permissions) ? role.permissions.includes("appointments") : false,
-        reports: Array.isArray(role?.permissions) ? role.permissions.includes("reports") : false,
-      }
+      users: role?.permissions.includes("users") || false,
+      roles: role?.permissions.includes("roles") || false,
+      appointments: role?.permissions.includes("appointments") || false,
+      reports: role?.permissions.includes("reports") || false,
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       // Convertir les switches en tableau de permissions
-      const permissions = Object.entries(data.permissions)
-        .filter(([_, enabled]) => enabled)
-        .map(([permission]) => permission);
+      const permissions = ["users", "roles", "appointments", "reports"].filter(
+        (perm) => data[perm]
+      );
 
       if (role) {
         // Mise à jour
         updateRole(role.name, {
           description: data.description,
           permissions,
-          ...(data.name && { name: data.name, displayName: data.name }),
+          ...(data.name && { name: data.name }),
         });
       } else {
         // Création
@@ -93,7 +80,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {role ? `Modifier le rôle : ${role.displayName}` : 'Nouveau rôle'}
@@ -138,7 +125,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.users"
+                name="users"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des utilisateurs</FormLabel>
@@ -154,7 +141,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.roles"
+                name="roles"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des rôles</FormLabel>
@@ -170,7 +157,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.appointments"
+                name="appointments"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Gestion des rendez-vous</FormLabel>
@@ -186,7 +173,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
               <FormField
                 control={form.control}
-                name="permissions.reports"
+                name="reports"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 py-2">
                     <FormLabel className="font-normal">Accès aux rapports</FormLabel>

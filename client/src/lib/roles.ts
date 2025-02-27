@@ -52,7 +52,12 @@ export const useRoleStore = create<RoleStore>()(
         set((state) => ({
           roles: state.roles.map((role) =>
             role.name === oldName
-              ? { ...role, ...updatedRole }
+              ? {
+                  ...role,
+                  ...updatedRole,
+                  // Si un nouveau nom est fourni, mettre à jour aussi le displayName
+                  ...(updatedRole.name && { displayName: updatedRole.name }),
+                }
               : role
           ),
         })),
