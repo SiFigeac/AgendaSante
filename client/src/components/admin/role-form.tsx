@@ -12,8 +12,9 @@ import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-const roleSchema = z.object({
-  name: z.string(),
+// Schéma pour la création d'un nouveau rôle (nom obligatoire)
+const createRoleSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
   description: z.string(),
   permissions: z.object({
     canManageUsers: z.boolean(),
@@ -23,7 +24,12 @@ const roleSchema = z.object({
   }),
 });
 
-type RoleFormData = z.infer<typeof roleSchema>;
+// Schéma pour la modification d'un rôle existant (nom optionnel)
+const updateRoleSchema = createRoleSchema.extend({
+  name: z.string().optional(),
+});
+
+type RoleFormData = z.infer<typeof createRoleSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -37,7 +43,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
@@ -54,10 +60,12 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     setIsSubmitting(true);
     try {
       if (role) {
-        updateRole(role.name, {
+        const updatedRole = {
+          ...(data.name && { name: data.name }), // Inclure le nom seulement s'il est fourni
           description: data.description,
           permissions: data.permissions,
-        });
+        };
+        updateRole(role.name, updatedRole);
         toast({
           title: "Succès",
           description: "Le rôle a été mis à jour avec succès.",
@@ -87,6 +95,23 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom du rôle</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder={role ? role.name : "Ex: admin"}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="description"
