@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-const roleSchema = z.object({
+// Schéma pour la création (nom obligatoire)
+const createRoleSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   description: z.string(),
   canManageUsers: z.boolean(),
@@ -21,7 +22,12 @@ const roleSchema = z.object({
   canViewReports: z.boolean(),
 });
 
-type RoleFormData = z.infer<typeof roleSchema>;
+// Schéma pour la modification (nom optionnel)
+const updateRoleSchema = createRoleSchema.extend({
+  name: z.string().optional(),
+});
+
+type RoleFormData = z.infer<typeof createRoleSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -35,7 +41,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
@@ -50,17 +56,28 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     setIsSubmitting(true);
     try {
       if (role) {
-        // Mise à jour d'un rôle existant
-        updateRole(role.name, {
-          ...data,
-          displayName: data.name,
-        });
+        // Pour la modification, on ne met à jour que les champs fournis
+        const updatedData = {
+          description: data.description,
+          canManageUsers: data.canManageUsers,
+          canManageRoles: data.canManageRoles,
+          canManageAppointments: data.canManageAppointments,
+          canViewReports: data.canViewReports,
+        };
+        // Ajouter le nom seulement s'il est fourni
+        if (data.name) {
+          Object.assign(updatedData, { 
+            name: data.name,
+            displayName: data.name 
+          });
+        }
+        updateRole(role.name, updatedData);
         toast({
           title: "Succès",
           description: "Le rôle a été mis à jour avec succès.",
         });
       } else {
-        // Création d'un nouveau rôle
+        // Pour la création, tous les champs sont requis
         addRole({
           ...data,
           displayName: data.name,
@@ -94,19 +111,23 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom du rôle</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ex: admin" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {(!role || role.name !== 'admin') && (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Nom du rôle 
+                      {role && <span className="text-sm text-muted-foreground ml-2">(optionnel)</span>}
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ex: responsable" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -115,12 +136,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Décrivez les responsabilités de ce rôle"
-                    />
+                    <Textarea {...field} placeholder="Description du rôle" />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
