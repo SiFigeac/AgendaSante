@@ -12,8 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-// Schéma pour la création (nom obligatoire)
-const createRoleSchema = z.object({
+const roleSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   description: z.string(),
   canManageUsers: z.boolean(),
@@ -22,17 +21,7 @@ const createRoleSchema = z.object({
   canViewReports: z.boolean(),
 });
 
-// Schéma pour la modification (tous les champs optionnels)
-const updateRoleSchema = z.object({
-  name: z.string().optional(),
-  description: z.string(),
-  canManageUsers: z.boolean(),
-  canManageRoles: z.boolean(),
-  canManageAppointments: z.boolean(),
-  canViewReports: z.boolean(),
-});
-
-type RoleFormData = z.infer<typeof createRoleSchema>;
+type RoleFormData = z.infer<typeof roleSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -46,7 +35,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
+    resolver: zodResolver(roleSchema),
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
@@ -63,12 +52,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       if (role) {
         // Mise à jour d'un rôle existant
         updateRole(role.name, {
-          name: data.name || role.name,
-          description: data.description,
-          canManageUsers: data.canManageUsers,
-          canManageRoles: data.canManageRoles,
-          canManageAppointments: data.canManageAppointments,
-          canViewReports: data.canViewReports,
+          ...data,
+          displayName: data.name,
         });
         toast({
           title: "Succès",
@@ -140,15 +125,15 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
               )}
             />
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <h4 className="font-medium">Permissions</h4>
 
               <FormField
                 control={form.control}
                 name="canManageUsers"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0">
-                    <FormLabel>Gestion des utilisateurs</FormLabel>
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des utilisateurs</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -163,8 +148,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="canManageRoles"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0">
-                    <FormLabel>Gestion des rôles</FormLabel>
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des rôles</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -179,8 +164,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="canManageAppointments"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0">
-                    <FormLabel>Gestion des rendez-vous</FormLabel>
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Gestion des rendez-vous</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -195,8 +180,8 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="canViewReports"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0">
-                    <FormLabel>Accès aux rapports</FormLabel>
+                  <FormItem className="flex items-center justify-between space-y-0 py-2">
+                    <FormLabel className="font-normal">Accès aux rapports</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -209,9 +194,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {role ? 'Mettre à jour le rôle' : 'Créer le rôle'}
             </Button>
           </form>
