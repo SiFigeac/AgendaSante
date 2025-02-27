@@ -21,20 +21,14 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { addRole, updateRole } = useRoleStore();
   const { toast } = useToast();
 
-  // Vérifier si une permission est activée
-  const hasPermission = (permissionName: string) => {
-    if (!role || !Array.isArray(role.permissions)) return false;
-    return role.permissions.includes(permissionName);
-  };
-
   const form = useForm({
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      users: hasPermission("users"),
-      roles: hasPermission("roles"),
-      appointments: hasPermission("appointments"),
-      reports: hasPermission("reports"),
+      users: role?.permissions?.includes("users") || false,
+      roles: role?.permissions?.includes("roles") || false,
+      appointments: role?.permissions?.includes("appointments") || false,
+      reports: role?.permissions?.includes("reports") || false,
     },
   });
 
@@ -49,18 +43,28 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       if (data.reports) permissions.push("reports");
 
       const roleData = {
-        name: data.name,
         description: data.description,
         permissions,
-        displayName: data.name || role?.displayName,
       };
 
       if (role) {
-        // Mise à jour
+        // Mise à jour d'un rôle existant
+        if (data.name && data.name !== role.name) {
+          roleData['name'] = data.name;
+        }
         updateRole(role.name, roleData);
       } else {
-        // Création
-        addRole(roleData as Role);
+        // Création d'un nouveau rôle
+        if (!data.name) {
+          throw new Error("Le nom est requis pour créer un rôle");
+        }
+        addRole({
+          name: data.name,
+          displayName: data.name,
+          description: data.description,
+          permissions,
+          color: null,
+        });
       }
 
       toast({
@@ -130,8 +134,10 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="users"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 py-2">
-                    <FormLabel className="font-normal">Gestion des utilisateurs</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Gestion des utilisateurs</FormLabel>
+                    </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -146,8 +152,10 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="roles"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 py-2">
-                    <FormLabel className="font-normal">Gestion des rôles</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Gestion des rôles</FormLabel>
+                    </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -162,8 +170,10 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="appointments"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 py-2">
-                    <FormLabel className="font-normal">Gestion des rendez-vous</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Gestion des rendez-vous</FormLabel>
+                    </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -178,8 +188,10 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                 control={form.control}
                 name="reports"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between space-y-0 py-2">
-                    <FormLabel className="font-normal">Accès aux rapports</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Accès aux rapports</FormLabel>
+                    </div>
                     <FormControl>
                       <Switch
                         checked={field.value}

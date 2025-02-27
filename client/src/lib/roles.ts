@@ -6,6 +6,7 @@ export type Role = {
   displayName: string;
   description: string;
   permissions: string[];
+  color?: string | null;
 };
 
 const defaultRoles: Role[] = [
@@ -16,16 +17,17 @@ const defaultRoles: Role[] = [
     permissions: ['users', 'roles', 'appointments', 'reports']
   },
   {
+    name: 'doctor',
+    displayName: 'Médecin',
+    description: 'Médecin pouvant gérer ses rendez-vous et patients',
+    permissions: ['appointments', 'reports'],
+    color: '#4B5563'
+  },
+  {
     name: 'staff',
     displayName: 'Personnel',
     description: 'Personnel administratif avec accès limité',
     permissions: ['appointments']
-  },
-  {
-    name: 'doctor',
-    displayName: 'Médecin',
-    description: 'Médecin pouvant gérer ses rendez-vous et patients',
-    permissions: ['appointments', 'reports']
   }
 ];
 
@@ -55,8 +57,12 @@ export const useRoleStore = create<RoleStore>()(
               ? {
                   ...role,
                   ...updatedRole,
-                  // Si un nouveau nom est fourni, mettre à jour aussi le displayName
-                  ...(updatedRole.name && { displayName: updatedRole.name }),
+                  // Assurer que les permissions restent un tableau
+                  permissions: Array.isArray(updatedRole.permissions) 
+                    ? updatedRole.permissions 
+                    : role.permissions,
+                  // Mettre à jour le displayName si le nom change
+                  displayName: updatedRole.name || role.displayName,
                 }
               : role
           ),
