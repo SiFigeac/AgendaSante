@@ -1,3 +1,5 @@
+import { create } from "zustand";
+
 export const PREDEFINED_ROLES = [
   {
     name: 'doctor',
@@ -25,3 +27,16 @@ export const PREDEFINED_ROLES = [
     description: 'Assistant médical avec accès aux dossiers patients'
   }
 ];
+
+type RoleStore = {
+  roles: typeof PREDEFINED_ROLES;
+  deleteRole: (roleName: string) => void;
+};
+
+export const useRoleStore = create<RoleStore>((set) => ({
+  roles: PREDEFINED_ROLES,
+  deleteRole: (roleName) =>
+    set((state) => ({
+      roles: state.roles.filter((role) => role.name !== roleName),
+    })),
+}));

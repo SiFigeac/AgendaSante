@@ -20,19 +20,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { RoleForm } from "./role-form";
-import { PREDEFINED_ROLES } from "@/lib/roles";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useRoleStore } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
 export function RoleManager() {
   const [showRoleForm, setShowRoleForm] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
-  const [roleToDelete, setRoleToDelete] = useState<(typeof PREDEFINED_ROLES)[0] | null>(null);
+  const [selectedRole, setSelectedRole] = useState<ReturnType<typeof useRoleStore>["roles"][0] | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<ReturnType<typeof useRoleStore>["roles"][0] | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { roles, deleteRole } = useRoleStore();
 
-  const handleEditRole = (role: typeof PREDEFINED_ROLES[0]) => {
+  const handleEditRole = (role: typeof roles[0]) => {
     setSelectedRole(role);
     setShowRoleForm(true);
   };
@@ -42,39 +40,14 @@ export function RoleManager() {
     setShowRoleForm(true);
   };
 
-  const deleteRoleMutation = useMutation({
-    mutationFn: async (roleName: string) => {
-      const res = await apiRequest("DELETE", `/api/admin/roles/${roleName}`);
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error);
-      }
-      // Ne pas essayer de parser la réponse en JSON si elle est vide
-      if (res.headers.get("content-length") === "0") {
-        return null;
-      }
-      return res.json().catch(() => null);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
-      toast({
-        title: "Succès",
-        description: `Le rôle ${roleToDelete?.displayName} a été supprimé.`,
-      });
-      setRoleToDelete(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleDeleteConfirm = () => {
     if (roleToDelete) {
-      deleteRoleMutation.mutate(roleToDelete.name);
+      deleteRole(roleToDelete.name);
+      toast({
+        title: "Succès",
+        description: `Le rôle ${roleToDelete.displayName} a été supprimé.`,
+      });
+      setRoleToDelete(null);
     }
   };
 
@@ -103,7 +76,7 @@ export function RoleManager() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {PREDEFINED_ROLES.map((role) => (
+              {roles.map((role) => (
                 <div 
                   key={role.name}
                   className="flex items-start justify-between p-4 rounded-lg border"
@@ -134,7 +107,6 @@ export function RoleManager() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setRoleToDelete(role)}
-                      disabled={deleteRoleMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                       <span className="sr-only">Supprimer le rôle</span>
@@ -164,10 +136,7 @@ export function RoleManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Non, annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteConfirm}
-              disabled={deleteRoleMutation.isPending}
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm}>
               Oui, supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
