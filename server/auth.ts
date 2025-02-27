@@ -6,6 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 declare global {
   namespace Express {
@@ -14,6 +16,7 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+const PostgresSessionStore = connectPg(session);
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -29,30 +32,48 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  console.log('Setting up authentication...');
+
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required');
+  }
+
+  const sessionStore = new PostgresSessionStore({
+    pool,
+    tableName: 'session',
+    createTableIfMissing: true,
+  });
+
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
+    store: sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+    },
+    name: 'session'
   };
 
+  console.log('Configuring session middleware...');
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  console.log('Session middleware configured');
 
   passport.use(
     new LocalStrategy(async (username: string, password: string, done) => {
       try {
+        console.log(`Attempting authentication for user: ${username}`);
         const user = await storage.getUserByUsername(username);
         if (!user || !user.isActive || !(await comparePasswords(password, user.password))) {
+          console.log('Authentication failed: Invalid credentials');
           return done(null, false, { message: "Identifiants invalides" });
         }
+        console.log('Authentication successful');
         return done(null, user);
       } catch (error) {
         console.error('Authentication error:', error);
@@ -62,13 +83,16 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
+    console.log('Serializing user:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log('Deserializing user:', id);
       const user = await storage.getUser(id);
       if (!user) {
+        console.log('User not found during deserialization');
         return done(null, false);
       }
       done(null, user);
@@ -132,9 +156,12 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req: Request, res: Response) => {
+    console.log('Checking user authentication status');
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Non authentifié" });
     }
     res.json(req.user);
   });
+
+  console.log('Authentication setup complete');
 }

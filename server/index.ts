@@ -11,14 +11,24 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
+console.log('Starting server initialization...');
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Test route for basic connectivity
+app.get("/ping", (_req, res) => {
+  console.log("Ping request received");
+  res.send("pong");
+});
 
 // Enhanced request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  console.log(`Incoming request: ${req.method} ${path}`);
+
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   // Capture JSON responses
@@ -46,7 +56,9 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    console.log('Initializing routes...');
     const server = await registerRoutes(app);
+    console.log('Routes initialized successfully');
 
     // Error handling middleware
     app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
@@ -64,8 +76,11 @@ app.use((req, res, next) => {
     });
 
     if (app.get("env") === "development") {
+      console.log('Setting up Vite for development...');
       await setupVite(app, server);
+      console.log('Vite setup complete');
     } else {
+      console.log('Setting up static serving for production...');
       serveStatic(app);
     }
 

@@ -7,7 +7,7 @@ import { WebSocketServer } from 'ws';
 
 interface AuthenticatedRequest extends Request {
   user?: Express.User;
-  isAuthenticated(): boolean;
+  isAuthenticated(): this is AuthenticatedRequest;
 }
 
 function checkPermission(permission: string) {
