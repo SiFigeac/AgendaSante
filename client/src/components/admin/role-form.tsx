@@ -12,19 +12,29 @@ import { Switch } from "@/components/ui/switch";
 import { useRoleStore, type Role } from "@/lib/roles";
 import { useToast } from "@/hooks/use-toast";
 
-const roleSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
-  displayName: z.string().min(1, "Le nom d'affichage est requis"),
-  description: z.string(),
-  permissions: z.object({
-    canManageUsers: z.boolean(),
-    canManageRoles: z.boolean(),
-    canManageAppointments: z.boolean(),
-    canViewReports: z.boolean(),
-  }),
+// Schéma de base pour les permissions
+const permissionsSchema = z.object({
+  canManageUsers: z.boolean(),
+  canManageRoles: z.boolean(),
+  canManageAppointments: z.boolean(),
+  canViewReports: z.boolean(),
 });
 
-type RoleFormData = z.infer<typeof roleSchema>;
+// Schéma pour la création (nom obligatoire)
+const createRoleSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  description: z.string(),
+  permissions: permissionsSchema,
+});
+
+// Schéma pour la modification (tous les champs optionnels)
+const updateRoleSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  permissions: permissionsSchema,
+});
+
+type RoleFormData = z.infer<typeof createRoleSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -38,10 +48,9 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
-      displayName: role?.displayName || "",
       description: role?.description || "",
       permissions: role?.permissions || {
         canManageUsers: false,
@@ -57,14 +66,23 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     try {
       if (role) {
         // Mise à jour d'un rôle existant
-        updateRole(role.name, data);
+        updateRole(role.name, {
+          name: data.name || role.name, // Garder l'ancien nom si pas de nouveau nom
+          description: data.description,
+          permissions: data.permissions,
+        });
         toast({
           title: "Succès",
           description: "Le rôle a été mis à jour avec succès.",
         });
       } else {
         // Création d'un nouveau rôle
-        addRole(data);
+        addRole({
+          name: data.name,
+          description: data.description,
+          permissions: data.permissions,
+          displayName: data.name, // Utiliser le même nom pour displayName
+        });
         toast({
           title: "Succès",
           description: "Le rôle a été créé avec succès.",
@@ -102,20 +120,6 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                   <FormLabel>Nom du rôle</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Ex: admin" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom d'affichage</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ex: Administrateur" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
