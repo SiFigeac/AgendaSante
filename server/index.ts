@@ -1,13 +1,11 @@
 import express from "express";
 import { setupVite, serveStatic, log } from "./vite";
-import { createServer } from "http";
-import { createApiRouter } from "./routes";
+import { registerRoutes } from "./routes";
 
 console.log('Starting server initialization...');
 
 const app = express();
 const port = 5000;
-const server = createServer(app);
 
 (async () => {
   try {
@@ -17,15 +15,13 @@ const server = createServer(app);
 
     // Mount API router first
     console.log('Setting up API routes...');
-    const apiRouter = createApiRouter();
-    app.use('/api', apiRouter);
+    const server = registerRoutes(app);
     console.log('API routes setup complete');
 
     // Then setup Vite
     console.log('Setting up Vite...');
     await setupVite(app, server);
     console.log('Vite setup complete');
-
 
     // Serve static files in production
     if (process.env.NODE_ENV === 'production') {
