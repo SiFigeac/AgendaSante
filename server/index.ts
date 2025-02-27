@@ -1,6 +1,17 @@
 import express from "express";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { storage } from "./storage";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+
+const scryptAsync = promisify(scrypt);
+const PostgresSessionStore = connectPg(session);
 
 console.log('Starting server with minimal configuration...');
 
@@ -30,6 +41,58 @@ const server = createServer(app);
     app.get("/api/ping", (_req, res) => {
       console.log("Ping request received");
       res.send("pong");
+    });
+
+    // Setup basic auth
+    const sessionStore = new PostgresSessionStore({
+      pool,
+      tableName: 'session',
+      createTableIfMissing: true,
+    });
+
+    app.use(session({
+      store: sessionStore,
+      secret: process.env.SESSION_SECRET || 'dev-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    }));
+
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    passport.serializeUser((user: any, done) => {
+      done(null, user.id);
+    });
+
+    passport.deserializeUser(async (id: number, done) => {
+      try {
+        const user = await storage.getUser(id);
+        done(null, user);
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    // Basic login route
+    app.post("/api/login", async (req, res) => {
+      try {
+        const { username, password } = req.body;
+        const user = await storage.getUserByUsername(username);
+
+        if (!user) {
+          return res.status(401).json({ error: "Identifiants invalides" });
+        }
+
+        res.json(user);
+      } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+      }
     });
 
     // Error handler
