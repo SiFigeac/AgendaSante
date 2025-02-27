@@ -103,6 +103,8 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         console.error('Login error:', err);
@@ -116,7 +118,14 @@ export function setupAuth(app: Express) {
           console.error('Session creation error:', err);
           return next(err);
         }
-        res.json(user);
+        res.json({ 
+          id: user.id,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isAdmin: user.isAdmin
+        });
       });
     })(req, res, next);
   });
