@@ -9,9 +9,12 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useRoleStore } from "@/lib/roles";
+import { useToast } from "@/hooks/use-toast";
 
 const createRoleSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
+  displayName: z.string().min(1, "Le nom d'affichage est requis"),
   description: z.string(),
   permissions: z.object({
     canManageUsers: z.boolean(),
@@ -39,11 +42,14 @@ interface RoleFormProps {
 
 export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { updateRole } = useRoleStore();
+  const { toast } = useToast();
 
   const form = useForm<RoleFormData>({
     resolver: zodResolver(role ? updateRoleSchema : createRoleSchema),
     defaultValues: {
       name: role?.name || "",
+      displayName: role?.displayName || "",
       description: role?.description || "",
       permissions: {
         canManageUsers: false,
@@ -57,16 +63,30 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const onSubmit = async (data: RoleFormData) => {
     setIsSubmitting(true);
     try {
-      // Si on modifie un rôle et que le nom n'est pas fourni, utiliser le nom initial
-      const roleData = {
-        ...data,
-        name: data.name || role?.name || "",
-      };
-      console.log("Role data:", roleData);
+      if (role) {
+        // Mise à jour d'un rôle existant
+        updateRole(role.name, {
+          name: data.name || role.name,
+          displayName: data.displayName,
+          description: data.description,
+          permissions: data.permissions
+        });
+        toast({
+          title: "Succès",
+          description: "Le rôle a été mis à jour avec succès.",
+        });
+      } else {
+        // TODO: Implement role creation
+        console.log("Creating new role:", data);
+      }
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error("Error saving role:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la sauvegarde du rôle.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +115,24 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
                   <FormControl>
                     <Input 
                       {...field} 
-                      placeholder={role ? role.name : "Ex: Administrateur"}
+                      placeholder={role ? role.name : "Ex: admin"}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom d'affichage</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Ex: Administrateur"
                     />
                   </FormControl>
                   <FormMessage />

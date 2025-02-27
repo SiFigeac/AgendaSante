@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { User } from "@shared/schema";
-import { PREDEFINED_ROLES } from "@/lib/roles";
+import { useRoleStore } from "@/lib/roles";
 
 interface UserEditFormProps {
   open: boolean;
@@ -22,6 +22,7 @@ interface UserEditFormProps {
 
 export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
   const { toast } = useToast();
+  const { roles } = useRoleStore();
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema.partial()),
@@ -144,7 +145,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PREDEFINED_ROLES.map((role) => (
+                      {roles.map((role) => (
                         <SelectItem key={role.name} value={role.name}>
                           {role.displayName}
                         </SelectItem>

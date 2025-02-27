@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useEffect } from "react";
+import { useRoleStore } from "@/lib/roles";
 
 interface UserFormProps {
   open: boolean;
@@ -40,17 +41,10 @@ const DEFAULT_PERMISSIONS = {
   admin: ["view_appointments", "manage_all_appointments", "manage_patients", "manage_users", "manage_system"],
 };
 
-// Define PREDEFINED_ROLES.  This is crucial and missing from the original and edited code.
-const PREDEFINED_ROLES = [
-  { name: "doctor", displayName: "Médecin" },
-  { name: "staff", displayName: "Personnel" },
-  { name: "admin", displayName: "Administrateur" },
-  // Add more roles here as needed
-];
-
 
 export function UserForm({ open, onOpenChange }: UserFormProps) {
   const { toast } = useToast();
+  const { roles } = useRoleStore();
 
   // Récupérer les couleurs existantes
   const { data: existingUsers } = useQuery({
@@ -205,7 +199,7 @@ export function UserForm({ open, onOpenChange }: UserFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PREDEFINED_ROLES.map((role) => (
+                      {roles.map((role) => (
                         <SelectItem key={role.name} value={role.name}>
                           {role.displayName}
                         </SelectItem>

@@ -1,6 +1,13 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export const PREDEFINED_ROLES = [
+export type Role = {
+  name: string;
+  displayName: string;
+  description: string;
+};
+
+const defaultRoles = [
   {
     name: 'doctor',
     displayName: 'Médecin',
@@ -29,14 +36,32 @@ export const PREDEFINED_ROLES = [
 ];
 
 type RoleStore = {
-  roles: typeof PREDEFINED_ROLES;
+  roles: Role[];
   deleteRole: (roleName: string) => void;
+  updateRole: (oldName: string, updatedRole: Partial<Role>) => void;
+  resetRoles: () => void;
 };
 
-export const useRoleStore = create<RoleStore>((set) => ({
-  roles: PREDEFINED_ROLES,
-  deleteRole: (roleName) =>
-    set((state) => ({
-      roles: state.roles.filter((role) => role.name !== roleName),
-    })),
-}));
+export const useRoleStore = create<RoleStore>()(
+  persist(
+    (set) => ({
+      roles: defaultRoles,
+      deleteRole: (roleName) =>
+        set((state) => ({
+          roles: state.roles.filter((role) => role.name !== roleName),
+        })),
+      updateRole: (oldName, updatedRole) =>
+        set((state) => ({
+          roles: state.roles.map((role) =>
+            role.name === oldName
+              ? { ...role, ...updatedRole }
+              : role
+          ),
+        })),
+      resetRoles: () => set({ roles: defaultRoles }),
+    }),
+    {
+      name: 'role-storage',
+    }
+  )
+);
