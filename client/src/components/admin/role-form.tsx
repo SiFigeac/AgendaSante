@@ -21,18 +21,21 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const { addRole, updateRole } = useRoleStore();
   const { toast } = useToast();
 
-  // Initialiser les permissions du formulaire
-  const defaultPermissions = {
-    name: role?.name || "",
-    description: role?.description || "",
-    users: role ? role.permissions.includes("users") : false,
-    roles: role ? role.permissions.includes("roles") : false,
-    appointments: role ? role.permissions.includes("appointments") : false,
-    reports: role ? role.permissions.includes("reports") : false,
+  // Vérifier si une permission est activée
+  const hasPermission = (permissionName: string) => {
+    if (!role || !Array.isArray(role.permissions)) return false;
+    return role.permissions.includes(permissionName);
   };
 
   const form = useForm({
-    defaultValues: defaultPermissions
+    defaultValues: {
+      name: role?.name || "",
+      description: role?.description || "",
+      users: hasPermission("users"),
+      roles: hasPermission("roles"),
+      appointments: hasPermission("appointments"),
+      reports: hasPermission("reports"),
+    },
   });
 
   const onSubmit = async (data: any) => {
@@ -48,7 +51,7 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
       const roleData = {
         name: data.name,
         description: data.description,
-        permissions: permissions,
+        permissions,
         displayName: data.name || role?.displayName,
       };
 
