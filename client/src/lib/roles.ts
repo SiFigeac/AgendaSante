@@ -54,9 +54,12 @@ export const useRoleStore = create<RoleStore>()(
             role.name === oldName
               ? {
                   ...role,
-                  ...updatedRole,
-                  // Si un nouveau nom est fourni, mettre à jour aussi le displayName
-                  ...(updatedRole.name && { displayName: updatedRole.name }),
+                  description: updatedRole.description ?? role.description,
+                  permissions: updatedRole.permissions ?? role.permissions,
+                  ...(updatedRole.name ? {
+                    name: updatedRole.name,
+                    displayName: updatedRole.name
+                  } : {})
                 }
               : role
           ),

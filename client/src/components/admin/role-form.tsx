@@ -25,46 +25,57 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
     defaultValues: {
       name: role?.name || "",
       description: role?.description || "",
-      users: role?.permissions.includes("users") || false,
-      roles: role?.permissions.includes("roles") || false,
-      appointments: role?.permissions.includes("appointments") || false,
-      reports: role?.permissions.includes("reports") || false,
+      users: role?.permissions?.includes("users") || false,
+      roles: role?.permissions?.includes("roles") || false,
+      appointments: role?.permissions?.includes("appointments") || false,
+      reports: role?.permissions?.includes("reports") || false,
     },
   });
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Convertir les switches en tableau de permissions
-      const permissions = ["users", "roles", "appointments", "reports"].filter(
-        (perm) => data[perm]
-      );
+      // Convertir les switches en permissions
+      const permissions = Object.entries({
+        users: data.users,
+        roles: data.roles,
+        appointments: data.appointments,
+        reports: data.reports,
+      })
+        .filter(([_, isEnabled]) => isEnabled)
+        .map(([permission]) => permission);
+
+      const roleData = {
+        description: data.description,
+        permissions,
+      };
+
+      // Ajouter le nom seulement s'il est fourni (pour la modification)
+      if (data.name) {
+        roleData['name'] = data.name;
+      }
 
       if (role) {
         // Mise à jour
-        updateRole(role.name, {
-          description: data.description,
-          permissions,
-          ...(data.name && { name: data.name }),
-        });
+        updateRole(role.name, roleData);
       } else {
-        // Création
+        // Création (le nom est requis)
         if (!data.name) {
           throw new Error("Le nom est requis pour créer un rôle");
         }
         addRole({
+          ...roleData,
           name: data.name,
           displayName: data.name,
-          description: data.description,
-          permissions,
-        });
+        } as Role);
       }
 
       toast({
         title: "Succès",
-        description: role ? "Rôle mis à jour avec succès" : "Rôle créé avec succès",
+        description: role 
+          ? "Le rôle a été mis à jour avec succès"
+          : "Le rôle a été créé avec succès",
       });
-
       onOpenChange(false);
       form.reset();
     } catch (error: any) {
