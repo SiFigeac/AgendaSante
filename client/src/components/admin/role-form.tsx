@@ -35,26 +35,23 @@ export function RoleForm({ open, onOpenChange, role }: RoleFormProps) {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Convertir les switches en tableau de permissions
       const permissions = [];
       if (data.users) permissions.push("users");
       if (data.roles) permissions.push("roles");
       if (data.appointments) permissions.push("appointments");
       if (data.reports) permissions.push("reports");
 
-      const roleData = {
+      const roleData: { description: string; permissions: string[]; name?: string } = {
         description: data.description,
         permissions,
       };
 
       if (role) {
-        // Mise à jour d'un rôle existant
         if (data.name && data.name !== role.name) {
-          roleData['name'] = data.name;
+          roleData.name = data.name;
         }
         updateRole(role.name, roleData);
       } else {
-        // Création d'un nouveau rôle
         if (!data.name) {
           throw new Error("Le nom est requis pour créer un rôle");
         }

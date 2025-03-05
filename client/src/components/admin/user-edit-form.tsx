@@ -39,7 +39,7 @@ export function UserEditForm({ open, onOpenChange, user }: UserEditFormProps) {
   });
 
   const updateUser = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data:any) => {
       // Assurer que la couleur est envoyée uniquement pour les médecins
       const updateData = {
         ...data,
